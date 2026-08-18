@@ -19,7 +19,11 @@ export default tseslint.config(
       },
       sourceType: 'commonjs',
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: [
+            'scripts/verify-api.mjs'
+          ],
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },

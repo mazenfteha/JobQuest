@@ -4,58 +4,40 @@ const prisma = new PrismaClient();
 
 const achievements = [
   {
-    key: 'FIRST_JOB_SAVED',
-    title: 'First Blood',
+    key: 'first_hunt',
+    title: 'First Hunt',
     description: 'Save your first job posting.',
-    icon: 'pin',
+    icon: '🔎',
   },
   {
-    key: 'FIRST_APPLICATION',
-    title: 'In the Game',
-    description: 'Submit your first application.',
-    icon: 'send',
+    key: 'first_blood',
+    title: 'First Blood',
+    description: 'Apply to your first job.',
+    icon: '⚔',
   },
   {
-    key: 'FIRST_INTERVIEW',
-    title: 'Face to Face',
-    description: 'Land your first interview.',
-    icon: 'handshake',
-  },
-  {
-    key: 'FIRST_OFFER',
-    title: 'Winner Winner',
-    description: 'Receive your first job offer.',
-    icon: 'trophy',
-  },
-  {
-    key: 'STREAK_3',
-    title: 'On a Roll',
+    key: 'on_fire',
+    title: 'On Fire',
     description: 'Reach a 3-day activity streak.',
-    icon: 'flame',
+    icon: '🔥',
   },
   {
-    key: 'STREAK_7',
-    title: 'Unstoppable',
-    description: 'Reach a 7-day activity streak.',
-    icon: 'bolt',
+    key: 'sharp_shooter',
+    title: 'Sharp Shooter',
+    description: 'Submit 10 applications.',
+    icon: '🎯',
   },
   {
-    key: 'LEVEL_5',
-    title: 'Rising Star',
-    description: 'Reach level 5.',
-    icon: 'star',
+    key: 'interview_ready',
+    title: 'Interview Ready',
+    description: 'Land your first interview.',
+    icon: '🤝',
   },
   {
-    key: 'LEVEL_10',
-    title: 'Seasoned Pro',
-    description: 'Reach level 10.',
-    icon: 'gem',
-  },
-  {
-    key: 'QUESTS_10',
-    title: 'Quest Master',
-    description: 'Complete 10 quests.',
-    icon: 'map',
+    key: 'boss_defeated',
+    title: 'Boss Defeated',
+    description: 'Receive your first job offer.',
+    icon: '🏆',
   },
 ] as const;
 
@@ -65,10 +47,13 @@ async function main() {
     await prisma.user.create({ data: { name: 'Hunter' } });
   }
 
+  const keys = achievements.map((a) => a.key);
+  await prisma.achievement.deleteMany({ where: { key: { notIn: keys } } });
+
   for (const achievement of achievements) {
     await prisma.achievement.upsert({
       where: { key: achievement.key },
-      update: {},
+      update: { ...achievement },
       create: { ...achievement },
     });
   }

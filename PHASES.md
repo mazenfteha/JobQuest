@@ -16,22 +16,22 @@ phase completes: https://app.notion.com/p/3be8e377fd61813e94a6cf4e0b5d2a43
 - [x] Prisma schema implemented from specs/data-model.md
 - [x] Initial migration run against local Postgres
 - [x] Prisma seed script (Achievements table populated, single User row seeded)
-- [ ] Base NestJS module structure (Jobs, Applications, Activities, Quests, Achievements, Dashboard)
-- [ ] `getSingleUser()` helper in place (no-auth convention from api.md)
+- [x] Base NestJS module structure (Jobs, Applications, Activities, Quests, Achievements, Dashboard)
+- [x] `getSingleUser()` helper in place (no-auth convention from api.md)
 
 ## Phase 2 — Backend Core Logic
-- [ ] `awardXP` pipeline implemented (single function, per business-logic.md)
-- [ ] Leveling formula + level-up detection
-- [ ] Streak logic
-- [ ] `POST /jobs` (save job + create Application, JOB_SAVED XP)
-- [ ] `GET /applications`, `GET /applications/:id`
-- [ ] `PATCH /applications/:id/status` (state machine + XP per transition)
-- [ ] `POST /activities/manual-log`, `GET /activities`
-- [ ] `POST /quests`, `GET /quests`, `PATCH /quests/:id/complete`, `DELETE /quests/:id`
-- [ ] `GET /achievements`
-- [ ] `GET /dashboard`
-- [ ] Achievement-check logic wired into `awardXP`
-- [ ] Manual verification of every endpoint (curl/Postman) against api.md contracts
+- [x] `awardXP` pipeline implemented (single function, per business-logic.md)
+- [x] Leveling formula + level-up detection
+- [x] Streak logic
+- [x] `POST /jobs` (save job + create Application, JOB_SAVED XP)
+- [x] `GET /applications`, `GET /applications/:id`
+- [x] `PATCH /applications/:id/status` (state machine + XP per transition)
+- [x] `POST /activities/manual-log`, `GET /activities`
+- [x] `POST /quests`, `GET /quests`, `PATCH /quests/:id/complete`, `DELETE /quests/:id`
+- [x] `GET /achievements`
+- [x] `GET /dashboard`
+- [x] Achievement-check logic wired into `awardXP`
+- [x] Manual verification of every endpoint (curl/Postman) against api.md contracts
 
 ## Phase 3 — Frontend Foundation
 - [ ] specs/ui-spec.md written
