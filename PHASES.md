@@ -34,12 +34,12 @@ phase completes: https://app.notion.com/p/3be8e377fd61813e94a6cf4e0b5d2a43
 - [x] Manual verification of every endpoint (curl/Postman) against api.md contracts
 
 ## Phase 3 — Frontend Foundation
-- [ ] specs/ui-spec.md written
-- [ ] API client set up (typed against api.md responses)
-- [ ] Dashboard shell with mock data
-- [ ] Job list / application board shell
-- [ ] Quest board shell
-- [ ] Achievements screen shell
+- [x] specs/ui-spec.md written
+- [x] API client set up (typed against api.md responses)
+- [x] Dashboard shell with mock data
+- [x] Job list / application board shell
+- [x] Quest board shell
+- [x] Achievements screen shell
 
 ## Phase 4 — Frontend Live + Polish
 - [ ] Dashboard wired to real `GET /dashboard`
