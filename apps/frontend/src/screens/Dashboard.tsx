@@ -3,20 +3,19 @@ import type { ReactNode } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import AvatarCard from '../components/AvatarCard'
-import AvatarTier from '../components/AvatarTier'
 import AvatarPicker from '../components/AvatarPicker'
-import { tierForLevel } from '../lib/tiers'
-import { useAvatarSeed } from '../lib/avatarConfig'
 import StatCard from '../components/StatCard'
 import QuestCard from '../components/QuestCard'
 import ActivityRow from '../components/ActivityRow'
 import AchievementCard from '../components/AchievementCard'
-import { dashboardMock, emptyDashboardMock } from '../mocks/dashboard'
+import type { DashboardResponse } from '../lib/api'
+import { api } from '../lib/api'
+import { useApi } from '../lib/useApi'
+import { useAvatarSeed } from '../lib/avatarConfig'
 
-// Phase 3: renders MOCK data. Phase 4 swaps `data` for GET /dashboard.
-type View = 'loaded' | 'loading' | 'empty' | 'avatars'
-
-const USER_NAME = 'Mazen'
+// Identity seed for the avatar (user-chosen, persisted in localStorage).
+// The dashboard API has no user `name`, so this is not derived from it.
+const DEFAULT_AVATAR_SEED = 'JobQuest'
 
 function SectionTitle({
   children,
@@ -50,231 +49,206 @@ function DashboardSkeleton() {
   )
 }
 
-function EmptyDashboard({
-  avatarSeed,
-  onEditAvatar,
-}: {
-  avatarSeed: string
-  onEditAvatar: () => void
-}) {
-  const { user } = emptyDashboardMock
+function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="space-y-6">
-      <AvatarCard
-        name={USER_NAME}
-        level={user.level}
-        xp={user.xp}
-        nextLevelXp={emptyDashboardMock.xpForCurrentLevel}
-        currentStreak={user.currentStreak}
-        longestStreak={user.longestStreak}
-        avatarSeed={avatarSeed}
-        onEditAvatar={onEditAvatar}
-      />
-      <div className="rounded-card bg-base-card p-10 text-center shadow-card">
-        <div className="mb-3 text-4xl">🗺️</div>
-        <h2 className="font-display text-lg font-bold text-ink">
-          Your quest begins here
-        </h2>
-        <p className="mx-auto mt-1 max-w-sm text-sm text-ink-soft">
-          Save your first job to start earning XP, leveling up, and unlocking
-          achievements.
-        </p>
-        <Link
-          to="/applications"
-          className="mt-5 inline-flex rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-primary-600"
-        >
-          Save your first job
-        </Link>
-      </div>
-    </div>
-  )
-}
-
-// Dev-only: preview all four avatar tiers at once.
-function AvatarTierPreview() {
-  const sample = [2, 6, 12, 16]
-  return (
-    <div className="rounded-card bg-base-card p-6 shadow-card">
-      <h2 className="mb-1 font-display text-base font-bold text-ink">
-        Avatar tiers
+    <div className="rounded-card bg-base-card p-10 text-center shadow-card">
+      <div className="mb-3 text-4xl">⚠️</div>
+      <h2 className="font-display text-lg font-bold text-ink">
+        Couldn&apos;t load your dashboard
       </h2>
-      <p className="mb-6 text-sm text-ink-soft">
-        Swapped by <code className="rounded bg-base-sunk px-1">user.level</code>{' '}
-        — dev preview, removed in Phase 4.
+      <p className="mx-auto mt-1 max-w-sm text-sm text-ink-soft">
+        The server didn&apos;t respond. Check the backend is running, then try
+        again.
       </p>
-      <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-        {sample.map((lvl) => {
-          const { title, band } = tierForLevel(lvl)
-          return (
-            <div key={lvl} className="text-center">
-              <div className="mx-auto w-fit">
-                <AvatarTier level={lvl} seed={USER_NAME} size={120} />
-              </div>
-              <p className="mt-4 font-display text-sm font-bold text-ink">
-                {title}
-              </p>
-              <p className="text-xs text-ink-muted">Level {band}</p>
-            </div>
-          )
-        })}
-      </div>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-5 inline-flex rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-primary-600"
+      >
+        Retry
+      </button>
     </div>
   )
 }
 
 export default function Dashboard() {
-  const [view, setView] = useState<View>('loaded')
-  const [avatarSeed, setAvatarSeed] = useAvatarSeed(USER_NAME)
+  const [avatarSeed, setAvatarSeed] = useAvatarSeed(DEFAULT_AVATAR_SEED)
   const [showPicker, setShowPicker] = useState(false)
-  const data = dashboardMock
+  const { data, error, loading, reload } = useApi<DashboardResponse>(
+    () => api.getDashboard(),
+    [],
+  )
+
+  const isEmpty =
+    !!data &&
+    data.user.xp === 0 &&
+    data.recentActivities.length === 0 &&
+    data.openQuests.length === 0
 
   return (
     <div>
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Dashboard</h1>
-          <p className="text-sm text-ink-soft">Welcome back, {USER_NAME} 👋</p>
-        </div>
-        <StateToggle view={view} onChange={setView} />
+      <header className="mb-6">
+        <h1 className="font-display text-2xl font-bold text-ink">Dashboard</h1>
+        <p className="text-sm text-ink-soft">
+          {data ? `Welcome back, ${data.user.name} 👋` : 'Welcome back 👋'}
+        </p>
       </header>
 
-      {view === 'loading' ? (
+      {loading && !data ? (
         <DashboardSkeleton />
-      ) : view === 'empty' ? (
-        <EmptyDashboard
-          avatarSeed={avatarSeed}
-          onEditAvatar={() => setShowPicker(true)}
-        />
-      ) : view === 'avatars' ? (
-        <AvatarTierPreview />
-      ) : (
-        <div className="space-y-6">
-          <AvatarCard
-            name={USER_NAME}
-            level={data.user.level}
-            xp={data.user.xp}
-            nextLevelXp={data.xpForCurrentLevel}
-            currentStreak={data.user.currentStreak}
-            longestStreak={data.user.longestStreak}
-            avatarSeed={avatarSeed}
-            onEditAvatar={() => setShowPicker(true)}
-          />
-
-          {/* Today's progress */}
-          <section>
-            <SectionTitle>Today&apos;s progress</SectionTitle>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <StatCard
-                icon="💼"
-                label="Applications"
-                value={data.todayProgress.applications}
-                accent="primary"
-              />
-              <StatCard
-                icon="🎙️"
-                label="Interviews"
-                value={data.todayProgress.interviews}
-                accent="success"
-              />
-              <StatCard
-                icon="⚡"
-                label="XP earned"
-                value={data.todayProgress.xpEarned}
-                accent="streak"
-              />
-            </div>
-          </section>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Open quests preview */}
-            <section>
-              <SectionTitle
-                action={
-                  <Link
-                    to="/quests"
-                    className="text-sm font-semibold text-primary-600 hover:text-primary-500"
-                  >
-                    View all
-                  </Link>
-                }
+      ) : error ? (
+        <ErrorState onRetry={reload} />
+      ) : data ? (
+        isEmpty ? (
+          <div className="space-y-6">
+            <AvatarCard
+              name={data.user.name}
+              level={data.user.level}
+              xp={data.user.xp}
+              currentLevelXp={data.xpForCurrentLevel}
+              currentStreak={data.user.currentStreak}
+              longestStreak={data.user.longestStreak}
+              avatarSeed={avatarSeed}
+              onEditAvatar={() => setShowPicker(true)}
+            />
+            <div className="rounded-card bg-base-card p-10 text-center shadow-card">
+              <div className="mb-3 text-4xl">🗺️</div>
+              <h2 className="font-display text-lg font-bold text-ink">
+                Your quest begins here
+              </h2>
+              <p className="mx-auto mt-1 max-w-sm text-sm text-ink-soft">
+                Save your first job to start earning XP, leveling up, and
+                unlocking achievements.
+              </p>
+              <Link
+                to="/applications"
+                className="mt-5 inline-flex rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-primary-600"
               >
-                Open quests
-              </SectionTitle>
-              <div className="space-y-3">
-                {data.openQuests.slice(0, 3).map((quest) => (
-                  <QuestCard key={quest.id} quest={quest} compact />
-                ))}
-              </div>
-
-              <div className="mt-6">
-                <SectionTitle>Recent achievements</SectionTitle>
-                <div className="flex flex-wrap gap-2">
-                  {data.recentAchievements.map((a) => (
-                    <AchievementCard
-                      key={a.key}
-                      icon={a.icon}
-                      title={a.title}
-                      compact
-                    />
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* Recent activity */}
-            <section>
-              <SectionTitle>Recent activity</SectionTitle>
-              <div className="rounded-card bg-base-card px-4 shadow-card">
-                <ul className="divide-y divide-black/5">
-                  {data.recentActivities.map((activity) => (
-                    <ActivityRow key={activity.id} activity={activity} />
-                  ))}
-                </ul>
-              </div>
-            </section>
+                Save your first job
+              </Link>
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="space-y-6">
+            <AvatarCard
+              name={data.user.name}
+              level={data.user.level}
+              xp={data.user.xp}
+              currentLevelXp={data.xpForCurrentLevel}
+              currentStreak={data.user.currentStreak}
+              longestStreak={data.user.longestStreak}
+              avatarSeed={avatarSeed}
+              onEditAvatar={() => setShowPicker(true)}
+            />
+
+            {/* Today's progress */}
+            <section>
+              <SectionTitle>Today&apos;s progress</SectionTitle>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <StatCard
+                  icon="💼"
+                  label="Applications"
+                  value={data.todayProgress.applications}
+                  accent="primary"
+                />
+                <StatCard
+                  icon="🎙️"
+                  label="Interviews"
+                  value={data.todayProgress.interviews}
+                  accent="success"
+                />
+                <StatCard
+                  icon="⚡"
+                  label="XP earned"
+                  value={data.todayProgress.xpEarned}
+                  accent="streak"
+                />
+              </div>
+            </section>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {/* Open quests preview */}
+              <section>
+                <SectionTitle
+                  action={
+                    <Link
+                      to="/quests"
+                      className="text-sm font-semibold text-primary-600 hover:text-primary-500"
+                    >
+                      View all
+                    </Link>
+                  }
+                >
+                  Open quests
+                </SectionTitle>
+                {data.openQuests.length === 0 ? (
+                  <div className="rounded-card bg-base-card p-6 text-center text-sm text-ink-muted shadow-card">
+                    No open quests right now.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {data.openQuests.slice(0, 3).map((quest) => (
+                      <QuestCard key={quest.id} quest={quest} compact />
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-6">
+                  <SectionTitle>Recent achievements</SectionTitle>
+                  {data.recentAchievements.length === 0 ? (
+                    <p className="text-sm text-ink-muted">
+                      None unlocked yet — keep going.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {data.recentAchievements.map((a) => (
+                        <AchievementCard
+                          key={a.key}
+                          icon={a.icon}
+                          title={a.title}
+                          compact
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* Recent activity */}
+              <section>
+                <SectionTitle>Recent activity</SectionTitle>
+                {data.recentActivities.length === 0 ? (
+                  <div className="rounded-card bg-base-card p-6 text-center text-sm text-ink-muted shadow-card">
+                    No activity yet.
+                  </div>
+                ) : (
+                  <div className="rounded-card bg-base-card px-4 shadow-card">
+                    <ul className="divide-y divide-black/5">
+                      {data.recentActivities.map((activity) => (
+                        <ActivityRow
+                          key={`${activity.type}-${activity.createdAt}`}
+                          activity={activity}
+                        />
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </section>
+            </div>
+          </div>
+        )
+      ) : null}
 
       <AnimatePresence>
         {showPicker ? (
           <AvatarPicker
-            level={
-              view === 'empty' ? emptyDashboardMock.user.level : data.user.level
-            }
+            level={data?.user.level ?? 1}
             selectedSeed={avatarSeed}
             onSelect={setAvatarSeed}
             onClose={() => setShowPicker(false)}
           />
         ) : null}
       </AnimatePresence>
-    </div>
-  )
-}
-
-// --- Dev-only affordance to preview screen states during Phase 3 review ---
-function StateToggle({
-  view,
-  onChange,
-}: {
-  view: View
-  onChange: (v: View) => void
-}) {
-  const options: View[] = ['loaded', 'loading', 'empty', 'avatars']
-  return (
-    <div className="inline-flex rounded-xl bg-base-sunk p-1 text-xs font-semibold">
-      {options.map((opt) => (
-        <button
-          key={opt}
-          type="button"
-          onClick={() => onChange(opt)}
-          className={`rounded-lg px-3 py-1.5 capitalize transition-colors ${
-            view === opt ? 'bg-base-card text-ink shadow-card' : 'text-ink-muted'
-          }`}
-        >
-          {opt}
-        </button>
-      ))}
     </div>
   )
 }

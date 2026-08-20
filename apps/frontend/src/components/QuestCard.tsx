@@ -1,8 +1,15 @@
-import type { Quest } from '../lib/api'
+import type { Quest, QuestStatus } from '../lib/api'
 import { categoryMeta } from '../lib/format'
 
+// Accepts a full Quest (Quest Board) or the dashboard's preview subset
+// (no status/completedAt) — treated as OPEN when status is absent.
+type QuestCardQuest = Pick<
+  Quest,
+  'id' | 'title' | 'category' | 'xpReward'
+> & { status?: QuestStatus; completedAt?: string | null }
+
 interface QuestCardProps {
-  quest: Quest
+  quest: QuestCardQuest
   /** When provided and the quest is OPEN, renders a Complete action. */
   onComplete?: (id: string) => void
   /** Slimmer padding for dashboard preview. */

@@ -197,7 +197,7 @@ making 4–5 requests on load.
 Response: `200`
 \`\`\`json
 {
-  "user": { "xp": 420, "level": 4, "currentStreak": 4, "longestStreak": 6 },
+  "user": { "name": "Hunter", "xp": 420, "level": 4, "currentStreak": 4, "longestStreak": 6 },
   "xpForCurrentLevel": 450,
   "todayProgress": { "applications": 2, "interviews": 1, "xpEarned": 140 },
   "recentActivities": [ { "type": "JOB_APPLIED", "xp": 50, "createdAt": "..." } ],

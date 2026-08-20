@@ -52,11 +52,19 @@ export interface JobSummary {
 }
 
 export interface Activity {
-  id: string
+  // `id` is present on GET /activities but omitted from the dashboard's
+  // recentActivities (per api.md) — hence optional.
+  id?: string
   type: ActivityType
   xp: number
   createdAt: string
 }
+
+/** Compact quest as embedded in the dashboard's openQuests (subset of Quest). */
+export type QuestPreview = Pick<
+  Quest,
+  'id' | 'title' | 'category' | 'xpReward'
+>
 
 export interface Quest {
   id: string
@@ -123,12 +131,17 @@ export interface XpAwardResult {
 
 export interface DashboardResponse {
   user: {
+    name: string
     xp: number
     level: number
     currentStreak: number
     longestStreak: number
   }
-  /** XP target for the next level (see specs/api.md GET /dashboard). */
+  /**
+   * XP required to reach the current level (the level's floor) —
+   * `xpRequiredForLevel(user.level)`, per the backend. NOT the next-level
+   * target. The next-level target is derived client-side (see lib/xp.ts).
+   */
   xpForCurrentLevel: number
   todayProgress: {
     applications: number
@@ -136,7 +149,7 @@ export interface DashboardResponse {
     xpEarned: number
   }
   recentActivities: Activity[]
-  openQuests: Quest[]
+  openQuests: QuestPreview[]
   recentAchievements: Array<Pick<Achievement, 'key' | 'title' | 'icon'>>
 }
 

@@ -4,22 +4,22 @@ import { levelProgress } from '../lib/xp'
 interface XPBarProps {
   xp: number
   level: number
-  /** Next-level XP target (dashboard's `xpForCurrentLevel`). */
-  nextLevelXp?: number
+  /** Current-level XP floor (dashboard's `xpForCurrentLevel`). */
+  currentLevelXp?: number
   showLabel?: boolean
 }
 
 export default function XPBar({
   xp,
   level,
-  nextLevelXp,
+  currentLevelXp,
   showLabel = true,
 }: XPBarProps) {
   const reduce = useReducedMotion()
   const { floor, ceiling, earnedInLevel, remaining, fraction } = levelProgress(
     xp,
     level,
-    nextLevelXp,
+    currentLevelXp,
   )
   const band = ceiling - floor
   const pct = Math.round(fraction * 100)

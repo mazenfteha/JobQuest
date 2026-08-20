@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { Quest, QuestCategory } from '../lib/api'
+import { api, ApiError } from '../lib/api'
+import { useApi } from '../lib/useApi'
+import { useRewards } from '../rewards/RewardsProvider'
 import { categoryMeta } from '../lib/format'
 import QuestCard from '../components/QuestCard'
-import { questsMock } from '../mocks/quests'
 
-// Phase 3: local state seeded from mock. New Quest / Complete update client
-// state only — Phase 4 wires POST /quests, PATCH /quests/:id/complete (+ XP).
+// Phase 4: live data. GET /quests, POST /quests, PATCH /quests/:id/complete.
+// 400 "already completed" is handled gracefully (notice + refetch).
 
 const CATEGORIES: QuestCategory[] = [
   'LEETCODE',
@@ -17,41 +19,43 @@ const CATEGORIES: QuestCategory[] = [
 ]
 
 export default function QuestBoard() {
-  const [quests, setQuests] = useState<Quest[]>(questsMock)
   const [showForm, setShowForm] = useState(false)
   const [showCompleted, setShowCompleted] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
+  const { celebrate } = useRewards()
+  const { data, error, loading, reload } = useApi<Quest[]>(
+    () => api.getQuests(),
+    [],
+  )
 
+  const quests = data ?? []
   const open = useMemo(() => quests.filter((q) => q.status === 'OPEN'), [quests])
   const done = useMemo(() => quests.filter((q) => q.status === 'DONE'), [quests])
 
-  function addQuest(input: {
+  async function addQuest(input: {
     title: string
     category: QuestCategory
     xpReward: number
   }) {
-    setQuests((prev) => [
-      {
-        id: `local-${crypto.randomUUID()}`,
-        title: input.title,
-        category: input.category,
-        xpReward: input.xpReward,
-        status: 'OPEN',
-        createdAt: new Date().toISOString(),
-        completedAt: null,
-      },
-      ...prev,
-    ])
+    // Throws on failure → NewQuestForm shows the server error inline.
+    await api.createQuest(input)
     setShowForm(false)
+    reload()
   }
 
-  function completeQuest(id: string) {
-    setQuests((prev) =>
-      prev.map((q) =>
-        q.id === id
-          ? { ...q, status: 'DONE', completedAt: new Date().toISOString() }
-          : q,
-      ),
-    )
+  async function completeQuest(id: string) {
+    setNotice(null)
+    try {
+      const res = await api.completeQuest(id)
+      celebrate(res.xpAward)
+      reload()
+    } catch (e) {
+      // e.g. 400 "Quest already completed" — resync rather than error out.
+      setNotice(
+        e instanceof ApiError ? e.message : 'Could not complete that quest.',
+      )
+      reload()
+    }
   }
 
   return (
@@ -72,14 +76,31 @@ export default function QuestBoard() {
         </button>
       </header>
 
+      {notice ? (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-primary-50 px-4 py-2.5 text-sm font-medium text-primary-600">
+          <span>{notice}</span>
+          <button
+            type="button"
+            onClick={() => setNotice(null)}
+            aria-label="Dismiss"
+            className="text-primary-600/70 hover:text-primary-600"
+          >
+            ✕
+          </button>
+        </div>
+      ) : null}
+
       <AnimatePresence initial={false}>
         {showForm ? (
-          <NewQuestForm onAdd={addQuest} onCancel={() => setShowForm(false)} />
+          <NewQuestForm onSubmit={addQuest} onCancel={() => setShowForm(false)} />
         ) : null}
       </AnimatePresence>
 
-      {/* Open quests */}
-      {open.length === 0 ? (
+      {loading && !data ? (
+        <ListSkeleton />
+      ) : error ? (
+        <ErrorState onRetry={reload} />
+      ) : open.length === 0 ? (
         <div className="rounded-card bg-base-card p-10 text-center shadow-card">
           <div className="mb-3 text-4xl">🗺️</div>
           <p className="mx-auto max-w-sm text-sm text-ink-soft">
@@ -133,6 +154,34 @@ export default function QuestBoard() {
   )
 }
 
+function ListSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="skeleton h-[72px] rounded-card" />
+      ))}
+    </div>
+  )
+}
+
+function ErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="rounded-card bg-base-card p-10 text-center shadow-card">
+      <div className="mb-3 text-4xl">⚠️</div>
+      <p className="mx-auto max-w-sm text-sm text-ink-soft">
+        Couldn&apos;t load your quests.
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-4 inline-flex rounded-xl bg-primary-500 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-600"
+      >
+        Retry
+      </button>
+    </div>
+  )
+}
+
 const XP_MIN = 1
 const XP_MAX = 500
 
@@ -148,26 +197,42 @@ function validateXp(raw: string): string | null {
 }
 
 function NewQuestForm({
-  onAdd,
+  onSubmit,
   onCancel,
 }: {
-  onAdd: (input: { title: string; category: QuestCategory; xpReward: number }) => void
+  onSubmit: (input: {
+    title: string
+    category: QuestCategory
+    xpReward: number
+  }) => Promise<void>
   onCancel: () => void
 }) {
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState<QuestCategory>('LEETCODE')
   const [xpRaw, setXpRaw] = useState('20')
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
 
   const titleError = title.trim().length === 0 ? 'Give your quest a name.' : null
   const xpError = validateXp(xpRaw)
   const valid = !titleError && !xpError
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault()
     setSubmitted(true)
+    setServerError(null)
     if (!valid) return
-    onAdd({ title: title.trim(), category, xpReward: Number(xpRaw) })
+    setSubmitting(true)
+    try {
+      await onSubmit({ title: title.trim(), category, xpReward: Number(xpRaw) })
+    } catch (err) {
+      setServerError(
+        err instanceof ApiError ? err.message : 'Could not create quest.',
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -254,6 +319,12 @@ function NewQuestForm({
             </div>
           </div>
 
+          {serverError ? (
+            <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-medium text-rose-600">
+              {serverError}
+            </p>
+          ) : null}
+
           <div className="flex items-center justify-end gap-2">
             <button
               type="button"
@@ -264,14 +335,13 @@ function NewQuestForm({
             </button>
             <button
               type="submit"
+              disabled={submitting}
               aria-disabled={!valid}
-              className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition-colors ${
-                valid
-                  ? 'bg-primary-500 hover:bg-primary-600'
-                  : 'bg-primary-300'
+              className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-60 ${
+                valid ? 'bg-primary-500 hover:bg-primary-600' : 'bg-primary-300'
               }`}
             >
-              Add quest
+              {submitting ? 'Adding…' : 'Add quest'}
             </button>
           </div>
         </div>

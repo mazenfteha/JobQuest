@@ -26,16 +26,18 @@ export interface LevelProgress {
 /**
  * Derive the current-level progress band for an XP bar.
  *
- * `nextLevelXp` is the dashboard's `xpForCurrentLevel` (the next-level target).
- * When omitted we fall back to the formula so the bar still renders correctly.
+ * `currentLevelXp` is the dashboard's `xpForCurrentLevel` — the XP floor of the
+ * current level (`xpRequiredForLevel(level)`). The next-level ceiling isn't
+ * returned by the API, so it's computed from the formula. Both default to the
+ * formula when omitted.
  */
 export function levelProgress(
   xp: number,
   level: number,
-  nextLevelXp?: number,
+  currentLevelXp?: number,
 ): LevelProgress {
-  const floor = xpRequiredForLevel(level)
-  const ceiling = nextLevelXp ?? xpRequiredForLevel(level + 1)
+  const floor = currentLevelXp ?? xpRequiredForLevel(level)
+  const ceiling = xpRequiredForLevel(level + 1)
   const band = Math.max(ceiling - floor, 1)
   const earnedInLevel = Math.max(xp - floor, 0)
   const fraction = Math.min(Math.max(earnedInLevel / band, 0), 1)

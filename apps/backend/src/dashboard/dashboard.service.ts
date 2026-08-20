@@ -45,6 +45,7 @@ export class DashboardService {
 
     return {
       user: {
+        name: user.name,
         xp: user.xp,
         level: user.level,
         currentStreak: user.currentStreak,
