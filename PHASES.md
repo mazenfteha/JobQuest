@@ -42,13 +42,13 @@ phase completes: https://app.notion.com/p/3be8e377fd61813e94a6cf4e0b5d2a43
 - [x] Achievements screen shell
 
 ## Phase 4 — Frontend Live + Polish
-- [ ] Dashboard wired to real `GET /dashboard`
-- [ ] Application status changes wired to `PATCH /applications/:id/status`
-- [ ] Quest create/complete wired to real endpoints
-- [ ] XP-gain toast animation (Framer Motion)
-- [ ] Level-up modal
-- [ ] Achievement-unlock toast
-- [ ] Avatar reflects current level
+- [x] Dashboard wired to real `GET /dashboard`
+- [x] Application status changes wired to `PATCH /applications/:id/status`
+- [x] Quest create/complete wired to real endpoints
+- [x] XP-gain toast animation (Framer Motion)
+- [x] Level-up modal
+- [x] Achievement-unlock toast
+- [x] Avatar reflects current level
 
 ## Phase 5 — Browser Extension
 - [ ] specs/extension-spec.md written (target sites, field extraction, fallback behavior)
