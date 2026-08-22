@@ -4,8 +4,7 @@
 
 Real field extraction on **LinkedIn** and **Wuzzuf** job posting pages.
 Any other site → manual fallback form (empty fields, user fills in
-title/company/url themselves, url pre-filled from the current tab since
-that part is always reliable).
+title/company/url themselves, url pre-filled from the current tab).
 
 ## Manifest (MV3)
 
@@ -13,28 +12,27 @@ that part is always reliable).
 - `action` → popup (`popup.html`)
 - `permissions`: `activeTab`, `storage`
 - `host_permissions`: `https://www.linkedin.com/*`, `https://wuzzuf.net/*`,
-  plus your deployed backend's origin (for the `POST /jobs` fetch call)
-- No content script needs to run on every page — inject on-demand via
+  plus your deployed backend's origin
+- No content script on every page — inject on-demand via
   `chrome.scripting.executeScript` when the popup opens, scoped to the
-  active tab.
+  active tab
 
-## Extraction strategy
+## Extraction strategy (per-site, confirmed via DevTools)
 
-Confirmed via DevTools inspection: LinkedIn's logged-in (Voyager) view
-does **not** expose `application/ld+json` structured data — it's
-stripped from the authenticated experience, likely kept only on the
-public/SEO-facing job pages. So extraction is DOM-selector-based for
-both sites, not JSON-LD.
+Findings differ meaningfully between the two sites:
 
-General selector-priority rule used below, per field:
-1. **URL-pattern selectors** (`a[href*="..."]`) — most stable, survives
-   LinkedIn's hashed-class churn since it's based on link structure
-2. **`data-testid` / semantic attributes** — intentional hooks, stable
-3. **Structural relationship** (e.g. "the span following the company
-   link") — used only when 1 and 2 aren't available
-4. **Hashed/generated class names** (e.g. `_9840af22`) — last-resort
-   fallback only, documented as fragile, expect these to break on
-   LinkedIn UI updates
+- **LinkedIn** (logged-in Voyager view): no `ld+json` present — confirmed,
+  deep search came back empty. DOM selectors only.
+- **Wuzzuf**: exposes `application/ld+json` JobPosting schema — use it
+  as primary. DOM selectors are fallback only, for if the script tag is
+  missing/malformed on a given page.
+
+Selector-priority rule (for DOM extraction, both sites):
+1. JSON-LD (Wuzzuf only) — most reliable, always try first when available
+2. URL-pattern selectors (`a[href*="..."]`) — stable structural hook
+3. `data-testid` / semantic attributes — intentional hooks
+4. Hashed/generated class names (e.g. `_9840af22`, `.css-gkdl1m`) —
+   last-resort fallback only, expected to break on redesigns/rebuilds
 
 ## Site configs
 
@@ -45,57 +43,97 @@ interface FieldSelector {
   fallback?: string;
 }
 
+interface JsonLdMap {
+  available: true;
+  parse: (raw: any) => Partial<JobDraft>;
+}
+
 interface SiteConfig {
   hostname: string;
-  title: FieldSelector;
-  company: FieldSelector;
-  location: FieldSelector;
-  description: FieldSelector;
+  jsonLd?: JsonLdMap;
+  dom: {
+    title: FieldSelector;
+    company: FieldSelector;
+    location: FieldSelector;
+    description: FieldSelector;
+  };
 }
 
 const siteConfigs: SiteConfig[] = [
   {
     hostname: 'linkedin.com',
-    title: {
-      primary: 'a[href*="/jobs/view/"]',
-      fallback: '.job-details-jobs-unified-top-card__job-title'
-    },
-    company: {
-      primary: 'a[href*="/company/"]',
-      fallback: '.job-details-jobs-unified-top-card__company-name'
-    },
-    location: {
-      // No stable attribute/href hook found — structural approach:
-      // the span immediately following the company link inside the
-      // top card header, matched by containing a comma-separated
-      // "City, Region, Country"-style text pattern.
-      primary: 'a[href*="/company/"] ~ span',
-      fallback: 'span._3df0079a._1d9c1239' // hashed class, brittle — last resort only
-    },
-    description: {
-      primary: '[data-testid="expandable-text-box"]' // most reliable hook on the page
+    // no jsonLd — confirmed absent on the logged-in view
+    dom: {
+      title: {
+        primary: 'a[href*="/jobs/view/"]',
+        fallback: '.job-details-jobs-unified-top-card__job-title'
+      },
+      company: {
+        primary: 'a[href*="/company/"]',
+        fallback: '.job-details-jobs-unified-top-card__company-name'
+      },
+      location: {
+        // structural: span sibling to the company link
+        primary: 'a[href*="/company/"] ~ span',
+        fallback: 'span._3df0079a._1d9c1239' // hashed, brittle, last resort
+      },
+      description: {
+        primary: '[data-testid="expandable-text-box"]'
+      }
     }
   },
   {
     hostname: 'wuzzuf.net',
-    title: { primary: '/* TODO — pending DevTools inspection */' },
-    company: { primary: '/* TODO — pending DevTools inspection */' },
-    location: { primary: '/* TODO — pending DevTools inspection */' },
-    description: { primary: '/* TODO — pending DevTools inspection */' }
+    jsonLd: {
+      available: true,
+      parse: (data) => ({
+        title: data.title,
+        company: data.hiringOrganization?.name,
+        location: [
+          data.jobLocation?.address?.addressRegion,
+          data.jobLocation?.address?.addressCountry
+        ].filter(Boolean).join(', '),
+        description: data.description // contains HTML — see note below
+      })
+    },
+    dom: {
+      // fallback only, used if JSON-LD script tag is missing/fails to parse
+      title: { primary: 'h1' }, // only H1 in the header section
+      company: { primary: 'a[href*="/jobs/careers/"]' },
+      location: {
+        // NOTE: this element contains BOTH company name and location
+        // text combined — needs string parsing (e.g. split on last
+        // comma-separated segment) to isolate location alone. Since
+        // JSON-LD is primary and gives location cleanly, this fallback
+        // path should be rare — flag to me if it needs real use, don't
+        // silently ship fragile parsing logic without a heads-up.
+        primary: 'strong.css-1vlp604'
+      },
+      description: {
+        // structural, order-dependent — the 3rd/4th <section> on the
+        // page (Job Description, then Requirements). Fragile if Wuzzuf
+        // reorders sections; again, fallback-only path.
+        primary: 'section:nth-of-type(3), section:nth-of-type(4)'
+      }
+    }
   }
 ];
 \`\`\`
 
-**Extraction logic per field:** try `primary` first; if it returns no
-match (or empty text), try `fallback` if one exists; if both fail,
-leave the field blank in the Review form rather than guessing.
+**Extraction order per site:**
+- Wuzzuf: try `jsonLd.parse` first → if the script tag is missing or
+  `JSON.parse` throws, fall to `dom` selectors (primary → fallback →
+  blank per field)
+- LinkedIn: `dom` selectors only (primary → fallback → blank per field)
 
-**Important caveat to build in:** the `location` selector's `primary`
-(`a[href*="/company/"] ~ span`) assumes the location span is a direct
-sibling of the company link in the DOM. If Claude Code tests this and
-finds it doesn't match reliably, don't silently fall back to the
-hashed class — flag it back to me so we adjust the strategy rather than
-shipping something fragile without knowing it.
+**Description field — HTML handling:** both sites' description content
+contains HTML markup (`<strong>`, `<ul>`, etc.), not plain text.
+Assumption for v1: **strip tags to plain text** before sending to
+`POST /jobs`, since `Job.description` in the data model is a plain
+`String` field and `ui-spec.md` doesn't call for rich-text rendering
+anywhere. Flag if you'd rather preserve formatting — that would mean
+storing raw HTML and trusting the frontend to sanitize/render it, which
+is more work for no clear payoff at MVP stage.
 
 ## Popup flow
 
@@ -109,37 +147,32 @@ Detect current tab hostname
 Known site               Unknown site
 (linkedin/wuzzuf)              │
   │                           │
-Run extraction              Manual form
-(primary → fallback         (title, company,
- → blank per field)          location, description
+Wuzzuf: try JSON-LD          Manual form
+  → fallback DOM             (title, company,
+LinkedIn: DOM only            location, description
   │                           all empty; url
 Review form                  pre-filled from tab)
 (pre-filled,                   │
- editable)                     │
+ editable,                     │
+ fallback fields flagged)      │
   └─────────────┬─────────────┘
                 ↓
-          User clicks "Save to JobQuest"
+          "Save to JobQuest"
                 ↓
           POST /jobs
                 ↓
         ┌───────┴────────┐
       201                409
         ↓                ↓
-  Success state    "Already saved" state
-  (shows +10 XP)    (informational, not error)
+  Success (+XP)    "Already saved"
 \`\`\`
 
 ## Popup states
 
-- **Loading** — brief, while extraction runs
-- **Review** — extracted or manual fields, editable before saving,
-  "Save to JobQuest" button. Any field extracted via a `fallback`
-  selector should visually hint "double-check this" (e.g. small
-  yellow dot) since fallbacks are less reliable
-- **Success** — shows the `xpAward` from the `POST /jobs` response
-- **Already Saved** (409) — informational, link to "View in JobQuest"
-- **Network/Auth Error** — simple retry state
+- **Loading**, **Review** (fallback-extracted fields visually flagged
+  for double-checking), **Success**, **Already Saved** (409,
+  informational), **Network/Auth Error** — unchanged from earlier draft
 
 ## Config
 
-One build-time env var: `VITE_API_URL`, baked in via Vite at build time.
+One build-time env var: `VITE_API_URL`.
