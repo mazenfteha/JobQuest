@@ -51,12 +51,12 @@ phase completes: https://app.notion.com/p/3be8e377fd61813e94a6cf4e0b5d2a43
 - [x] Avatar reflects current level
 
 ## Phase 5 — Browser Extension
-- [ ] specs/extension-spec.md written (target sites, field extraction, fallback behavior)
-- [ ] Manifest (MV3) + permissions
-- [ ] Popup UI ("Save Job" button)
-- [ ] Field extraction per target site
-- [ ] POST to `/jobs`, handle 409 (already saved) gracefully
-- [ ] Loaded unpacked locally, tested against at least LinkedIn + one other site
+- [x] specs/extension-spec.md written (target sites, field extraction, fallback behavior)
+- [x] Manifest (MV3) + permissions
+- [x] Popup UI ("Save Job" button)
+- [x] Field extraction per target site
+- [x] POST to `/jobs`, handle 409 (already saved) gracefully
+- [x] Loaded unpacked locally, tested against at least LinkedIn + one other site
 
 ## Phase 6 — Deploy & Wire Up
 - [ ] Backend deployed to Railway (Postgres plugin, env vars, root dir set)
