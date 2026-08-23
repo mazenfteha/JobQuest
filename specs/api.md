@@ -139,9 +139,10 @@ Response: `200`
 ## Quests (self-created Engineering Growth tasks)
 
 ### `POST /quests`
-Request:
+Request (`category` is free text; `xpReward` is NOT accepted — see "Quests —
+updated" below; reward is a fixed 5 XP):
 \`\`\`json
-{ "title": "Solve 2 LeetCode mediums", "category": "LEETCODE", "xpReward": 20 }
+{ "title": "Tailor CV for 2 roles", "category": "interview-prep" }
 \`\`\`
 Response: `201` → the created Quest, `status: "OPEN"`.
 
@@ -201,7 +202,7 @@ Response: `200`
   "xpForCurrentLevel": 450,
   "todayProgress": { "applications": 2, "interviews": 1, "xpEarned": 140 },
   "recentActivities": [ { "type": "JOB_APPLIED", "xp": 50, "createdAt": "..." } ],
-  "openQuests": [ { "id": "uuid", "title": "...", "category": "LEETCODE", "xpReward": 20 } ],
+  "openQuests": [ { "id": "uuid", "title": "...", "category": "interview-prep" } ],
   "recentAchievements": [ { "key": "on_fire", "title": "On Fire", "icon": "🔥" } ]
 }
 \`\`\`
@@ -214,3 +215,24 @@ Standard NestJS exception shape throughout:
 \`\`\`json
 { "statusCode": 400, "message": "...", "error": "Bad Request" }
 \`\`\`
+
+## Auth
+- `GET /auth/google` — redirect to Google consent
+- `GET /auth/google/callback` — OAuth callback, issues JWT cookie
+- `GET /auth/me` — current user profile
+- `POST /auth/logout`
+- `GET /auth/extension-token` — issues a JWT for the extension to store
+
+## Friends & Leaderboard
+- `POST /friends/invite` → `{ inviteLink: "https://.../join?code=XXXX" }`
+- `POST /friends/accept/:code` → creates ACCEPTED Friendship
+- `GET /leaderboard` → `[{ userId, name, avatarUrl, xp, level }]` sorted by xp desc
+
+## Quests — updated
+`POST /quests` request body no longer accepts `xpReward` — reject the
+field if present (400) rather than silently ignoring it, so the
+frontend can't accidentally send a stale value.
+
+`PATCH /quests/:id/complete` — now can return `400` with
+`"Daily quest limit reached (5/5)"` in addition to the existing
+already-done check.

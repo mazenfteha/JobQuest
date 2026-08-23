@@ -47,7 +47,7 @@ export interface SaveJobResponse {
   xpAward: XpAwardResult
 }
 
-const BASE_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+export const BASE_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
 export const APP_URL = (import.meta.env.VITE_APP_URL ?? '').replace(/\/$/, '')
 
 export class ApiError extends Error {
@@ -60,12 +60,18 @@ export class ApiError extends Error {
   }
 }
 
-export async function saveJob(payload: SaveJobPayload): Promise<SaveJobResponse> {
+export async function saveJob(
+  payload: SaveJobPayload,
+  token: string,
+): Promise<SaveJobResponse> {
   let res: Response
   try {
     res = await fetch(`${BASE_URL}/jobs`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(payload),
     })
   } catch {

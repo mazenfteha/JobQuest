@@ -1,4 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { api } from '../lib/api'
+import { useAuth } from '../lib/auth'
 
 interface NavItem {
   to: string
@@ -11,6 +13,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/applications', label: 'Applications', icon: '💼' },
   { to: '/quests', label: 'Quest Board', icon: '🗡️' },
   { to: '/achievements', label: 'Achievements', icon: '🏅' },
+  { to: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
 ]
 
 function linkClass({ isActive }: { isActive: boolean }): string {
@@ -21,7 +24,16 @@ function linkClass({ isActive }: { isActive: boolean }): string {
     : `${base} text-ink-soft hover:bg-base-sunk hover:text-ink`
 }
 
+async function handleLogout() {
+  try {
+    await api.logout()
+  } finally {
+    window.location.reload()
+  }
+}
+
 export default function AppLayout() {
+  const { user } = useAuth()
   return (
     <div className="min-h-screen md:flex">
       {/* Sidebar */}
@@ -46,9 +58,29 @@ export default function AppLayout() {
           ))}
         </nav>
 
-        <p className="hidden text-xs text-ink-muted md:block md:px-3">
-          Phase 3 · mock data
-        </p>
+        <div className="ml-auto flex items-center gap-2 md:ml-0 md:mt-2 md:flex-col md:items-stretch md:gap-2 md:border-t md:border-black/5 md:pt-4">
+          <div className="hidden items-center gap-2 md:flex md:px-2">
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt=""
+                className="h-7 w-7 rounded-full"
+                referrerPolicy="no-referrer"
+              />
+            ) : null}
+            <span className="truncate text-sm font-medium text-ink">
+              {user?.name}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="rounded-xl px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-base-sunk hover:text-ink"
+          >
+            <span aria-hidden>↩</span>
+            <span className="ml-2 hidden sm:inline">Log out</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main content */}

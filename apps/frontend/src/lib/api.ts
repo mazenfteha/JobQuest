@@ -24,18 +24,7 @@ export type ActivityType =
   | 'NETWORKING'
   | 'CV_TAILORED'
   | 'COVER_LETTER'
-  | 'LEETCODE'
-  | 'SYSTEM_DESIGN'
-  | 'BACKEND_PRACTICE'
-  | 'READING'
-  | 'SIDE_PROJECT'
-
-export type QuestCategory =
-  | 'LEETCODE'
-  | 'SYSTEM_DESIGN'
-  | 'BACKEND_PRACTICE'
-  | 'READING'
-  | 'SIDE_PROJECT'
+  | 'SIDE_QUEST'
 
 export type QuestStatus = 'OPEN' | 'DONE'
 
@@ -61,20 +50,20 @@ export interface Activity {
 }
 
 /** Compact quest as embedded in the dashboard's openQuests (subset of Quest). */
-export type QuestPreview = Pick<
-  Quest,
-  'id' | 'title' | 'category' | 'xpReward'
->
+export type QuestPreview = Pick<Quest, 'id' | 'title' | 'category'>
 
 export interface Quest {
   id: string
   title: string
-  category: QuestCategory
-  xpReward: number
+  /** Free text (any profession) — no fixed category list. */
+  category: string
   status: QuestStatus
   createdAt: string
   completedAt: string | null
 }
+
+/** Every quest completion awards a fixed reward (specs/business-logic.md). */
+export const QUEST_XP_REWARD = 5
 
 export interface Achievement {
   id: string
@@ -181,6 +170,28 @@ export interface QuestCompleteResponse {
 }
 
 // ---------------------------------------------------------------------------
+// Friends & Leaderboard
+// ---------------------------------------------------------------------------
+
+export interface LeaderboardEntry {
+  rank: number
+  userId: string
+  name: string
+  avatarUrl: string | null
+  xp: number
+  level: number
+  streak: number
+}
+
+export interface FriendProfile {
+  id: string
+  name: string
+  avatarUrl: string | null
+  xp: number
+  level: number
+}
+
+// ---------------------------------------------------------------------------
 // Request payloads
 // ---------------------------------------------------------------------------
 
@@ -195,8 +206,7 @@ export interface SaveJobPayload {
 
 export interface CreateQuestPayload {
   title: string
-  category: QuestCategory
-  xpReward: number
+  category: string
 }
 
 export interface ManualLogPayload {
@@ -210,6 +220,22 @@ export interface ManualLogPayload {
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
 
+/** Full URL that starts the Google sign-in flow (a top-level navigation). */
+export const AUTH_LOGIN_URL = `${BASE_URL}/auth/google`
+
+/** Authenticated user profile from GET /auth/me. */
+export interface AuthUser {
+  id: string
+  name: string
+  email: string | null
+  avatarUrl: string | null
+  xp: number
+  level: number
+  currentStreak: number
+  longestStreak: number
+  inviteCode: string
+}
+
 export class ApiError extends Error {
   status: number
 
@@ -222,6 +248,8 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
+    // Send the auth cookie cross-origin (backend CORS allows credentials).
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     ...init,
   })
@@ -246,6 +274,10 @@ function withStatus(path: string, status?: string): string {
 }
 
 export const api = {
+  // Auth
+  getMe: () => request<AuthUser>('/auth/me'),
+  logout: () => request<{ ok: boolean }>('/auth/logout', { method: 'POST' }),
+
   // Dashboard
   getDashboard: () => request<DashboardResponse>('/dashboard'),
 
@@ -291,4 +323,15 @@ export const api = {
 
   // Achievements
   getAchievements: () => request<Achievement[]>('/achievements'),
+
+  // Friends & Leaderboard
+  inviteFriend: () =>
+    request<{ inviteLink: string }>('/friends/invite', { method: 'POST' }),
+  acceptFriend: (code: string) =>
+    request<{ friendship: { id: string; userId: string; friendId: string; status: string } }>(
+      `/friends/accept/${code}`,
+      { method: 'POST' },
+    ),
+  getFriends: () => request<FriendProfile[]>('/friends'),
+  getLeaderboard: () => request<LeaderboardEntry[]>('/leaderboard'),
 }

@@ -1,12 +1,12 @@
 import type { Quest, QuestStatus } from '../lib/api'
-import { categoryMeta } from '../lib/format'
+import { QUEST_XP_REWARD } from '../lib/api'
 
 // Accepts a full Quest (Quest Board) or the dashboard's preview subset
 // (no status/completedAt) — treated as OPEN when status is absent.
-type QuestCardQuest = Pick<
-  Quest,
-  'id' | 'title' | 'category' | 'xpReward'
-> & { status?: QuestStatus; completedAt?: string | null }
+type QuestCardQuest = Pick<Quest, 'id' | 'title' | 'category'> & {
+  status?: QuestStatus
+  completedAt?: string | null
+}
 
 interface QuestCardProps {
   quest: QuestCardQuest
@@ -17,7 +17,6 @@ interface QuestCardProps {
 }
 
 export default function QuestCard({ quest, onComplete, compact }: QuestCardProps) {
-  const { label, icon } = categoryMeta(quest.category)
   const done = quest.status === 'DONE'
 
   return (
@@ -30,7 +29,7 @@ export default function QuestCard({ quest, onComplete, compact }: QuestCardProps
         className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-base-sunk text-lg"
         aria-hidden
       >
-        {icon}
+        🗺️
       </span>
 
       <div className="min-w-0 flex-1">
@@ -41,11 +40,13 @@ export default function QuestCard({ quest, onComplete, compact }: QuestCardProps
         >
           {quest.title}
         </p>
-        <p className="text-xs text-ink-muted">{label}</p>
+        {quest.category ? (
+          <p className="truncate text-xs text-ink-muted">{quest.category}</p>
+        ) : null}
       </div>
 
       <span className="shrink-0 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-bold text-primary-600 tabular">
-        +{quest.xpReward} XP
+        +{QUEST_XP_REWARD} XP
       </span>
 
       {done ? (

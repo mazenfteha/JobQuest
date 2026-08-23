@@ -2,10 +2,14 @@ import './popup.css'
 import { matchSite } from './siteConfigs'
 import { extractFields } from './extract'
 import { saveJob, ApiError, APP_URL } from './api'
+import { getToken, signIn, signOut } from './auth'
 import type { SiteKey, ExtractedFields } from './types'
 import type { XpAwardResult } from './api'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
+
+// Bearer token for API calls, loaded from chrome.storage on init.
+let authToken: string | null = null
 
 interface FormState {
   title: string
@@ -39,6 +43,34 @@ function renderLoading() {
       <div class="spinner"></div>
       <p class="muted" style="margin-top:12px">Reading this page…</p>
     </div>`
+}
+
+function renderSignIn(message?: string) {
+  app.innerHTML = `
+    <div class="card center">
+      <h1 class="brand" style="justify-content:center">🎯 JobQuest</h1>
+      <p class="muted" style="margin-top:6px">
+        ${escapeHtml(message ?? 'Sign in to save jobs and earn XP.')}
+      </p>
+      <button id="signin" class="btn-primary" style="margin-top:16px">
+        🔑 Sign in with Google
+      </button>
+      <p id="signin-error" class="err"></p>
+    </div>`
+  const btn = document.getElementById('signin') as HTMLButtonElement
+  btn.addEventListener('click', async () => {
+    btn.disabled = true
+    btn.textContent = 'Opening Google…'
+    try {
+      authToken = await signIn()
+      void init()
+    } catch (e) {
+      const err = document.getElementById('signin-error')!
+      err.textContent = e instanceof Error ? e.message : 'Sign-in failed.'
+      btn.disabled = false
+      btn.textContent = '🔑 Sign in with Google'
+    }
+  })
 }
 
 function renderReview(form: FormState) {
@@ -101,18 +133,28 @@ async function save(form: FormState, btn: HTMLButtonElement) {
   btn.disabled = true
   btn.textContent = 'Saving…'
   try {
-    const res = await saveJob({
-      title,
-      company,
-      url,
-      location: form.location.trim() || undefined,
-      description: form.description.trim() || undefined,
-      source: form.source,
-    })
+    const res = await saveJob(
+      {
+        title,
+        company,
+        url,
+        location: form.location.trim() || undefined,
+        description: form.description.trim() || undefined,
+        source: form.source,
+      },
+      authToken ?? '',
+    )
     renderSuccess(res.xpAward)
   } catch (e) {
     if (e instanceof ApiError && e.status === 409) {
       renderAlready()
+      return
+    }
+    if (e instanceof ApiError && e.status === 401) {
+      // Token expired/invalid — clear it and ask to sign in again.
+      await signOut()
+      authToken = null
+      renderSignIn('Session expired — please sign in again.')
       return
     }
     // Network / other — keep the form data, show inline error, allow retry.
@@ -192,6 +234,13 @@ function wireCommon() {
 
 async function init() {
   renderLoading()
+
+  authToken = await getToken()
+  if (!authToken) {
+    renderSignIn()
+    return
+  }
+
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
     const tabUrl = tab?.url ?? ''

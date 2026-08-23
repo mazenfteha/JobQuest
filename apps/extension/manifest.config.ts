@@ -13,7 +13,7 @@ export default defineManifest({
   },
   // `scripting` is required for chrome.scripting.executeScript (spec omitted
   // it; activeTab alone grants host access but not the API).
-  permissions: ['activeTab', 'storage', 'scripting'],
+  permissions: ['activeTab', 'storage', 'scripting', 'identity'],
   host_permissions: [
     'https://www.linkedin.com/*',
     'https://wuzzuf.net/*',

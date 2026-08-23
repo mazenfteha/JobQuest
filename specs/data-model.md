@@ -50,20 +50,9 @@ enum ActivityType {
   NETWORKING
   CV_TAILORED
   COVER_LETTER
-  LEETCODE
-  SYSTEM_DESIGN
-  BACKEND_PRACTICE
-  READING
-  SIDE_PROJECT
+  SIDE_QUEST        // replaces LEETCODE/SYSTEM_DESIGN/BACKEND_PRACTICE/READING/SIDE_PROJECT
 }
 
-enum QuestCategory {
-  LEETCODE
-  SYSTEM_DESIGN
-  BACKEND_PRACTICE
-  READING
-  SIDE_PROJECT
-}
 
 enum QuestStatus {
   OPEN
@@ -80,11 +69,37 @@ model User {
   lastActivityDate DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+   // ...existing fields...
+  googleId    String?  @unique
+  email       String?  @unique
+  avatarUrl   String?
+  inviteCode  String   @unique @default(cuid())
+
+  friendships       Friendship[] @relation("UserFriendships")
+  friendOf          Friendship[] @relation("FriendOfUser")
 
   applications Application[]
   activities   Activity[]
   quests       Quest[]
   achievements UserAchievement[]
+}
+
+model Friendship {
+  id        String           @id @default(uuid())
+  userId    String
+  friendId  String
+  status    FriendshipStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+
+  user   User @relation("UserFriendships", fields: [userId], references: [id])
+  friend User @relation("FriendOfUser", fields: [friendId], references: [id])
+
+  @@unique([userId, friendId])
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
 }
 
 model Job {
@@ -117,13 +132,12 @@ model Application {
 }
 
 model Quest {
-  id          String        @id @default(uuid())
+  id          String      @id @default(uuid())
   userId      String
   title       String
-  category    QuestCategory
-  xpReward    Int
-  status      QuestStatus   @default(OPEN)
-  createdAt   DateTime      @default(now())
+  category    String      // free text (any profession); reward is fixed 5 XP
+  status      QuestStatus @default(OPEN)
+  createdAt   DateTime    @default(now())
   completedAt DateTime?
 
   user       User       @relation(fields: [userId], references: [id])

@@ -1,22 +1,14 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import type { Quest, QuestCategory } from '../lib/api'
-import { api, ApiError } from '../lib/api'
+import type { Quest } from '../lib/api'
+import { api, ApiError, QUEST_XP_REWARD } from '../lib/api'
 import { useApi } from '../lib/useApi'
 import { useRewards } from '../rewards/RewardsProvider'
-import { categoryMeta } from '../lib/format'
 import QuestCard from '../components/QuestCard'
 
-// Phase 4: live data. GET /quests, POST /quests, PATCH /quests/:id/complete.
-// 400 "already completed" is handled gracefully (notice + refetch).
-
-const CATEGORIES: QuestCategory[] = [
-  'LEETCODE',
-  'SYSTEM_DESIGN',
-  'BACKEND_PRACTICE',
-  'READING',
-  'SIDE_PROJECT',
-]
+// Quest logic v2: category is free text, reward is a fixed 5 XP (server-side),
+// daily cap of 5 completions/day. GET/POST/PATCH /quests; 400s
+// ("already completed" / "Daily quest limit reached") surface via the notice.
 
 export default function QuestBoard() {
   const [showForm, setShowForm] = useState(false)
@@ -32,11 +24,7 @@ export default function QuestBoard() {
   const open = useMemo(() => quests.filter((q) => q.status === 'OPEN'), [quests])
   const done = useMemo(() => quests.filter((q) => q.status === 'DONE'), [quests])
 
-  async function addQuest(input: {
-    title: string
-    category: QuestCategory
-    xpReward: number
-  }) {
+  async function addQuest(input: { title: string; category: string }) {
     // Throws on failure → NewQuestForm shows the server error inline.
     await api.createQuest(input)
     setShowForm(false)
@@ -182,41 +170,23 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
   )
 }
 
-const XP_MIN = 1
-const XP_MAX = 500
-
-function validateXp(raw: string): string | null {
-  const trimmed = raw.trim()
-  if (trimmed === '') return 'Enter an XP reward.'
-  const n = Number(trimmed)
-  if (!Number.isFinite(n)) return 'Numbers only.'
-  if (!Number.isInteger(n)) return 'Whole numbers only.'
-  if (n < XP_MIN) return `XP must be at least ${XP_MIN}.`
-  if (n > XP_MAX) return `Keep it ${XP_MAX} XP or under.`
-  return null
-}
-
 function NewQuestForm({
   onSubmit,
   onCancel,
 }: {
-  onSubmit: (input: {
-    title: string
-    category: QuestCategory
-    xpReward: number
-  }) => Promise<void>
+  onSubmit: (input: { title: string; category: string }) => Promise<void>
   onCancel: () => void
 }) {
   const [title, setTitle] = useState('')
-  const [category, setCategory] = useState<QuestCategory>('LEETCODE')
-  const [xpRaw, setXpRaw] = useState('20')
+  const [category, setCategory] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
   const titleError = title.trim().length === 0 ? 'Give your quest a name.' : null
-  const xpError = validateXp(xpRaw)
-  const valid = !titleError && !xpError
+  const categoryError =
+    category.trim().length === 0 ? 'Add a category.' : null
+  const valid = !titleError && !categoryError
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -225,7 +195,7 @@ function NewQuestForm({
     if (!valid) return
     setSubmitting(true)
     try {
-      await onSubmit({ title: title.trim(), category, xpReward: Number(xpRaw) })
+      await onSubmit({ title: title.trim(), category: category.trim() })
     } catch (err) {
       setServerError(
         err instanceof ApiError ? err.message : 'Could not create quest.',
@@ -268,55 +238,32 @@ function NewQuestForm({
             ) : null}
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-ink-soft" htmlFor="q-cat">
-                Category
-              </label>
-              <select
-                id="q-cat"
-                value={category}
-                onChange={(e) => setCategory(e.target.value as QuestCategory)}
-                className="w-full rounded-xl border border-black/10 bg-base px-3 py-2 text-sm text-ink outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
-              >
-                {CATEGORIES.map((c) => {
-                  const { label, icon } = categoryMeta(c)
-                  return (
-                    <option key={c} value={c}>
-                      {icon} {label}
-                    </option>
-                  )
-                })}
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-ink-soft" htmlFor="q-xp">
-                XP reward{' '}
-                <span className="font-normal text-ink-muted">
-                  ({XP_MIN}–{XP_MAX})
-                </span>
-              </label>
-              <input
-                id="q-xp"
-                type="number"
-                inputMode="numeric"
-                min={XP_MIN}
-                max={XP_MAX}
-                step={1}
-                value={xpRaw}
-                onChange={(e) => setXpRaw(e.target.value)}
-                aria-invalid={submitted && !!xpError}
-                className={`w-full rounded-xl border bg-base px-3 py-2 text-sm text-ink outline-none focus:ring-2 ${
-                  submitted && xpError
-                    ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100'
-                    : 'border-black/10 focus:border-primary-400 focus:ring-primary-100'
-                }`}
-              />
-              {submitted && xpError ? (
-                <p className="mt-1 text-xs font-medium text-rose-600">{xpError}</p>
-              ) : null}
-            </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-ink-soft" htmlFor="q-cat">
+              Category
+            </label>
+            <input
+              id="q-cat"
+              type="text"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="e.g. Interview prep, Portfolio, Networking"
+              aria-invalid={submitted && !!categoryError}
+              className={`w-full rounded-xl border bg-base px-3 py-2 text-sm text-ink outline-none focus:ring-2 ${
+                submitted && categoryError
+                  ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100'
+                  : 'border-black/10 focus:border-primary-400 focus:ring-primary-100'
+              }`}
+            />
+            {submitted && categoryError ? (
+              <p className="mt-1 text-xs font-medium text-rose-600">
+                {categoryError}
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-ink-muted">
+                Reward: +{QUEST_XP_REWARD} XP · up to 5 quests/day
+              </p>
+            )}
           </div>
 
           {serverError ? (

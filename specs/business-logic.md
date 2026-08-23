@@ -85,16 +85,29 @@ check.
 
 ## Quest completion flow
 
+Side quests are intentionally generic (not tech-specific) and capped to
+prevent abuse:
+
+- Fixed reward: every quest completion awards exactly **5 XP** — not
+  user-configurable, ignore any client-supplied value entirely
+- Daily cap: **max 5 completed quests per user per day** (UTC calendar
+  day, same definition used for streaks)
+
     User marks Quest DONE
+          ↓
+    Count today's SIDE_QUEST Activities for this user
+          ↓
+    >= 5 already today?
+       YES → reject with 400, "Daily quest limit reached (5/5)"
+       NO  → proceed
           ↓
     quest.status = DONE, quest.completedAt = now
           ↓
-    awardXP(userId, activityType = matches quest.category,
-             xp = quest.xpReward, { questId: quest.id })
+    awardXP(userId, SIDE_QUEST, xp = 5, { questId: quest.id })
 
-`QuestCategory` and the relevant `ActivityType` values share the same
-names (`LEETCODE`, `SYSTEM_DESIGN`, etc.) by design — no separate mapping
-table needed.
+`category` is free text the user enters when creating the quest — no
+validation against a fixed list. This is what makes JobQuest usable for
+any profession, not just software engineering.
 
 ## Achievement checks
 
@@ -114,3 +127,11 @@ Each check: if condition met AND no existing `UserAchievement` for that
 `(userId, achievementId)`, create one. Achievements are seeded once via
 a Prisma seed script (`key`, `title`, `description`, `icon`) — not
 created dynamically.
+
+## Leaderboard
+
+`GET /leaderboard` returns the current user plus every User with an
+ACCEPTED Friendship (either direction), sorted by `xp` descending. No
+separate leaderboard table — it's a live query, not a cached/materialized
+one, since friend-group sizes here are small (this isn't a global
+leaderboard at scale).

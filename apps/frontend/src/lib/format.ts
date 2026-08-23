@@ -1,4 +1,4 @@
-import type { ActivityType, ApplicationStatus, QuestCategory } from './api'
+import type { ActivityType, ApplicationStatus } from './api'
 
 // Presentation metadata + formatting shared across components.
 
@@ -16,19 +16,7 @@ const ACTIVITY_META: Record<ActivityType, Meta> = {
   NETWORKING: { label: 'Networking', icon: '🤝' },
   CV_TAILORED: { label: 'Tailored a CV', icon: '📝' },
   COVER_LETTER: { label: 'Cover letter', icon: '✉️' },
-  LEETCODE: { label: 'LeetCode', icon: '🧩' },
-  SYSTEM_DESIGN: { label: 'System design', icon: '🏗️' },
-  BACKEND_PRACTICE: { label: 'Backend practice', icon: '🛠️' },
-  READING: { label: 'Reading', icon: '📚' },
-  SIDE_PROJECT: { label: 'Side project', icon: '🚀' },
-}
-
-const CATEGORY_META: Record<QuestCategory, Meta> = {
-  LEETCODE: { label: 'LeetCode', icon: '🧩' },
-  SYSTEM_DESIGN: { label: 'System Design', icon: '🏗️' },
-  BACKEND_PRACTICE: { label: 'Backend Practice', icon: '🛠️' },
-  READING: { label: 'Reading', icon: '📚' },
-  SIDE_PROJECT: { label: 'Side Project', icon: '🚀' },
+  SIDE_QUEST: { label: 'Side quest', icon: '🗺️' },
 }
 
 export const STATUS_ORDER: ApplicationStatus[] = [
@@ -49,10 +37,6 @@ export const STATUS_LABEL: Record<ApplicationStatus, string> = {
 
 export function activityMeta(type: ActivityType): Meta {
   return ACTIVITY_META[type]
-}
-
-export function categoryMeta(category: QuestCategory): Meta {
-  return CATEGORY_META[category]
 }
 
 /** Compact relative time, e.g. "just now", "3h ago", "Aug 14". */
