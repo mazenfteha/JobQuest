@@ -70,7 +70,6 @@ export class DashboardService {
         id: q.id,
         title: q.title,
         category: q.category,
-        xpReward: q.xpReward,
       })),
       recentAchievements: recentUserAchievements.map((ua) => ({
         key: ua.achievement.key,

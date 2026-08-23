@@ -1,18 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
-import { SingleUserService } from '../common/single-user.service';
+import type { User } from '@prisma/client';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { AchievementsService } from './achievements.service';
 
 @Controller('achievements')
 export class AchievementsController {
-  constructor(
-    private readonly achievements: AchievementsService,
-    private readonly users: SingleUserService,
-  ) {}
+  constructor(private readonly achievements: AchievementsService) {}
 
   @Get()
-  findAll() {
-    return this.users
-      .getSingleUser()
-      .then((user) => this.achievements.findAll(user.id));
+  findAll(@CurrentUser() user: User) {
+    return this.achievements.findAll(user.id);
   }
 }

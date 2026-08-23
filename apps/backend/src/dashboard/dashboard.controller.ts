@@ -1,18 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
-import { SingleUserService } from '../common/single-user.service';
+import type { User } from '@prisma/client';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { DashboardService } from './dashboard.service';
 
 @Controller('dashboard')
 export class DashboardController {
-  constructor(
-    private readonly dashboard: DashboardService,
-    private readonly users: SingleUserService,
-  ) {}
+  constructor(private readonly dashboard: DashboardService) {}
 
   @Get()
-  getDashboard() {
-    return this.users
-      .getSingleUser()
-      .then((user) => this.dashboard.getDashboard(user.id));
+  getDashboard(@CurrentUser() user: User) {
+    return this.dashboard.getDashboard(user.id);
   }
 }

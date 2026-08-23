@@ -1,34 +1,30 @@
 import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
-import { SingleUserService } from '../common/single-user.service';
+import type { User } from '@prisma/client';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { ApplicationsService } from './applications.service';
 import { ListApplicationsQueryDto } from './dto/list-applications-query.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 
 @Controller('applications')
 export class ApplicationsController {
-  constructor(
-    private readonly applications: ApplicationsService,
-    private readonly users: SingleUserService,
-  ) {}
+  constructor(private readonly applications: ApplicationsService) {}
 
   @Get()
-  findAll(@Query() query: ListApplicationsQueryDto) {
-    return this.users
-      .getSingleUser()
-      .then((user) => this.applications.findAll(user.id, query.status));
+  findAll(@CurrentUser() user: User, @Query() query: ListApplicationsQueryDto) {
+    return this.applications.findAll(user.id, query.status);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.users
-      .getSingleUser()
-      .then((user) => this.applications.findOne(user.id, id));
+  findOne(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.applications.findOne(user.id, id);
   }
 
   @Patch(':id/status')
-  updateStatus(@Param('id') id: string, @Body() dto: UpdateStatusDto) {
-    return this.users
-      .getSingleUser()
-      .then((user) => this.applications.updateStatus(user.id, id, dto.status));
+  updateStatus(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Body() dto: UpdateStatusDto,
+  ) {
+    return this.applications.updateStatus(user.id, id, dto.status);
   }
 }

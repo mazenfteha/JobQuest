@@ -10,44 +10,34 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { SingleUserService } from '../common/single-user.service';
+import type { User } from '@prisma/client';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { CreateQuestDto } from './dto/create-quest.dto';
 import { ListQuestsQueryDto } from './dto/list-quests-query.dto';
 import { QuestsService } from './quests.service';
 
 @Controller('quests')
 export class QuestsController {
-  constructor(
-    private readonly quests: QuestsService,
-    private readonly users: SingleUserService,
-  ) {}
+  constructor(private readonly quests: QuestsService) {}
 
   @Post()
-  create(@Body() dto: CreateQuestDto) {
-    return this.users
-      .getSingleUser()
-      .then((user) => this.quests.create(user.id, dto));
+  create(@CurrentUser() user: User, @Body() dto: CreateQuestDto) {
+    return this.quests.create(user.id, dto);
   }
 
   @Get()
-  findAll(@Query() query: ListQuestsQueryDto) {
-    return this.users
-      .getSingleUser()
-      .then((user) => this.quests.findAll(user.id, query.status));
+  findAll(@CurrentUser() user: User, @Query() query: ListQuestsQueryDto) {
+    return this.quests.findAll(user.id, query.status);
   }
 
   @Patch(':id/complete')
-  complete(@Param('id') id: string) {
-    return this.users
-      .getSingleUser()
-      .then((user) => this.quests.complete(user.id, id));
+  complete(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.quests.complete(user.id, id);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
-    return this.users
-      .getSingleUser()
-      .then((user) => this.quests.remove(user.id, id));
+  remove(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.quests.remove(user.id, id);
   }
 }

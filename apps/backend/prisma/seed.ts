@@ -42,11 +42,7 @@ const achievements = [
 ] as const;
 
 async function main() {
-  const existingUser = await prisma.user.findFirst();
-  if (!existingUser) {
-    await prisma.user.create({ data: { name: 'Hunter' } });
-  }
-
+  // No placeholder user — real users are created on first Google sign-in.
   const keys = achievements.map((a) => a.key);
   await prisma.achievement.deleteMany({ where: { key: { notIn: keys } } });
 
