@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { useTheme } from '../lib/theme'
 
 interface NavItem {
   to: string
@@ -20,7 +21,7 @@ function linkClass({ isActive }: { isActive: boolean }): string {
   const base =
     'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors'
   return isActive
-    ? `${base} bg-primary-50 text-primary-600`
+    ? `${base} bg-primary-50 text-primary-400`
     : `${base} text-ink-soft hover:bg-base-sunk hover:text-ink`
 }
 
@@ -34,14 +35,17 @@ async function handleLogout() {
 
 export default function AppLayout() {
   const { user } = useAuth()
+  const { theme, toggle } = useTheme()
   return (
     <div className="min-h-screen md:flex">
       {/* Sidebar */}
-      <aside className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b border-black/5 bg-base-card/90 px-4 backdrop-blur md:h-screen md:w-64 md:flex-col md:items-stretch md:gap-0 md:border-b-0 md:border-r md:px-4 md:py-6">
+      <aside className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b border-black/5 dark:border-white/5 bg-base-card/60 px-4 backdrop-blur-xl md:h-screen md:w-64 md:flex-col md:items-stretch md:gap-0 md:border-b-0 md:border-r md:px-4 md:py-6">
         <div className="flex items-center gap-2.5 md:px-2 md:pb-8">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-lg shadow-glow">
-            🎯
-          </span>
+          <img
+            src="/brand/logo-concept-a-badge.svg"
+            alt=""
+            className="h-9 w-9"
+          />
           <span className="font-display text-lg font-bold tracking-tight">
             JobQuest
           </span>
@@ -58,7 +62,24 @@ export default function AppLayout() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2 md:ml-0 md:mt-2 md:flex-col md:items-stretch md:gap-2 md:border-t md:border-black/5 md:pt-4">
+        <div className="mt-auto flex flex-col gap-2 border-t border-black/5 dark:border-white/5 pt-4 md:mt-0">
+          {/* Theme toggle */}
+          <button
+            type="button"
+            onClick={toggle}
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:bg-base-sunk hover:text-ink"
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            <span className="text-base" aria-hidden>
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </span>
+            <span className="hidden sm:inline">
+              {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            </span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 md:ml-0 md:mt-2 md:flex-col md:items-stretch md:gap-2 md:border-t md:border-black/5 dark:md:border-white/5 md:pt-4">
           <div className="hidden items-center gap-2 md:flex md:px-2">
             {user?.avatarUrl ? (
               <img

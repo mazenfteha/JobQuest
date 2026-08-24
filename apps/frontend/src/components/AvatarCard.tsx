@@ -32,12 +32,15 @@ export default function AvatarCard({
   const headline = name ?? title
 
   return (
-    <section className="rounded-card bg-base-card p-6 shadow-card">
-      <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center">
+    <section className="relative overflow-hidden rounded-card bg-base-card p-6 shadow-card sm:p-8">
+      {/* Gold gradient border accent — echoes the badge motif */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 rounded-t-card bg-gradient-to-r from-primary-300 via-primary-400 to-primary-600" />
+
+      <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
         <div className="relative shrink-0 pt-2">
           {/* Crossfade old→new tier on tier change (not an instant swap).
               Keyed by tier index: a same-tier level-up updates in place. */}
-          <div className="relative h-[104px] w-[104px]">
+          <div className="relative h-[128px] w-[128px]">
             <AnimatePresence initial={false}>
               <motion.div
                 key={tierIndex}
@@ -47,7 +50,7 @@ export default function AvatarCard({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <AvatarTier level={level} seed={avatarSeed ?? name} size={104} />
+                <AvatarTier level={level} seed={avatarSeed ?? name} size={128} />
               </motion.div>
             </AnimatePresence>
           </div>
@@ -66,7 +69,7 @@ export default function AvatarCard({
         <div className="flex-1 text-center sm:text-left">
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="font-display text-xl font-bold text-ink">
+              <h1 className="font-display text-2xl font-bold text-ink">
                 {headline}
               </h1>
               {name ? (

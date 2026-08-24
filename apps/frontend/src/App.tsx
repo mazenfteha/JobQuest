@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
 import AppLayout from './layout/AppLayout'
 import Dashboard from './screens/Dashboard'
 import Applications from './screens/Applications'
@@ -6,20 +6,48 @@ import QuestBoard from './screens/QuestBoard'
 import Achievements from './screens/Achievements'
 import Leaderboard from './screens/Leaderboard'
 import Join from './screens/Join'
+import LandingPage from './screens/LandingPage'
 import { RewardsProvider } from './rewards/RewardsProvider'
 import { AuthProvider, useAuth } from './lib/auth'
-import { AUTH_LOGIN_URL } from './lib/api'
+import { ThemeProvider } from './lib/theme'
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Gate />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <GameBackground />
+        <Gate />
+      </AuthProvider>
+    </ThemeProvider>
+  )
+}
+
+/** Animated background — floating gradient orbs + drifting particles. */
+function GameBackground() {
+  return (
+    <div className="game-bg" aria-hidden>
+      <div className="game-bg__orb game-bg__orb--1" />
+      <div className="game-bg__orb game-bg__orb--2" />
+      <div className="game-bg__orb game-bg__orb--3" />
+      <div className="game-bg__particle" />
+      <div className="game-bg__particle" />
+      <div className="game-bg__particle" />
+      <div className="game-bg__particle" />
+      <div className="game-bg__particle" />
+      <div className="game-bg__particle" />
+      <div className="game-bg__particle" />
+      <div className="game-bg__particle" />
+      <div className="game-bg__particle" />
+      <div className="game-bg__particle" />
+      <div className="game-bg__particle" />
+    </div>
   )
 }
 
 function Gate() {
   const { user, loading } = useAuth()
+  const [params] = useSearchParams()
+  const authError = params.get('error')
 
   if (loading) {
     return (
@@ -32,7 +60,20 @@ function Gate() {
     )
   }
 
-  if (!user) return <LoginScreen />
+  if (!user) {
+    return (
+      <>
+        {authError ? (
+          <div className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 py-3">
+            <div className="rounded-xl bg-streak/15 px-4 py-2.5 text-sm font-medium text-streak shadow-card">
+              Sign-in didn&apos;t complete — try again.
+            </div>
+          </div>
+        ) : null}
+        <LandingPage />
+      </>
+    )
+  }
 
   return (
     <RewardsProvider>
@@ -47,28 +88,5 @@ function Gate() {
         </Route>
       </Routes>
     </RewardsProvider>
-  )
-}
-
-function LoginScreen() {
-  return (
-    <div className="grid min-h-screen place-items-center bg-base px-4">
-      <div className="w-full max-w-sm rounded-card bg-base-card p-8 text-center shadow-card">
-        <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 text-2xl shadow-glow">
-          🎯
-        </div>
-        <h1 className="font-display text-2xl font-bold text-ink">JobQuest</h1>
-        <p className="mx-auto mt-2 max-w-xs text-sm text-ink-soft">
-          Turn your job hunt into a game. Sign in to track applications, earn XP,
-          and level up.
-        </p>
-        <a
-          href={AUTH_LOGIN_URL}
-          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-ink/90"
-        >
-          <span aria-hidden>🔑</span> Sign in with Google
-        </a>
-      </div>
-    </div>
   )
 }

@@ -8,9 +8,11 @@ import StatCard from '../components/StatCard'
 import QuestCard from '../components/QuestCard'
 import ActivityRow from '../components/ActivityRow'
 import AchievementCard from '../components/AchievementCard'
-import type { DashboardResponse } from '../lib/api'
+import LeaderboardWidget from '../components/LeaderboardWidget'
+import type { DashboardResponse, LeaderboardEntry } from '../lib/api'
 import { api } from '../lib/api'
 import { useApi } from '../lib/useApi'
+import { useAuth } from '../lib/auth'
 import { useAvatarSeed } from '../lib/avatarConfig'
 
 // Identity seed for the avatar (user-chosen, persisted in localStorage).
@@ -72,10 +74,15 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
 }
 
 export default function Dashboard() {
+  const { user: authUser } = useAuth()
   const [avatarSeed, setAvatarSeed] = useAvatarSeed(DEFAULT_AVATAR_SEED)
   const [showPicker, setShowPicker] = useState(false)
   const { data, error, loading, reload } = useApi<DashboardResponse>(
     () => api.getDashboard(),
+    [],
+  )
+  const { data: leaderboard } = useApi<LeaderboardEntry[]>(
+    () => api.getLeaderboard(),
     [],
   )
 
@@ -112,7 +119,7 @@ export default function Dashboard() {
               onEditAvatar={() => setShowPicker(true)}
             />
             <div className="rounded-card bg-base-card p-10 text-center shadow-card">
-              <div className="mb-3 text-4xl">🗺️</div>
+              <div className="mb-3 text-4xl">📜</div>
               <h2 className="font-display text-lg font-bold text-ink">
                 Your quest begins here
               </h2>
@@ -223,7 +230,7 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <div className="rounded-card bg-base-card px-4 shadow-card">
-                    <ul className="divide-y divide-black/5">
+                    <ul className="divide-y divide-black/5 dark:divide-white/5">
                       {data.recentActivities.map((activity) => (
                         <ActivityRow
                           key={`${activity.type}-${activity.createdAt}`}
@@ -235,6 +242,14 @@ export default function Dashboard() {
                 )}
               </section>
             </div>
+
+            {/* Leaderboard widget */}
+            {leaderboard && leaderboard.length > 0 ? (
+              <LeaderboardWidget
+                entries={leaderboard}
+                currentUserId={authUser?.id}
+              />
+            ) : null}
           </div>
         )
       ) : null}

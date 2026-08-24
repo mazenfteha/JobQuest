@@ -142,3 +142,65 @@ doesn't reinvent slightly different versions per page:
 - Level-up modal: scale + fade in, avatar tier swap can crossfade
 - Card hover (Applications/Quests): subtle lift (translateY + shadow),
   not required but fits the playful tone
+
+
+  # UI Overhaul Addendum — v2 Gamification Pass
+
+## Why this pass exists
+
+Feedback after Phase 4: the app functions but visually reads as a
+tracker with game *labels* on it, not a game. This pass targets the
+gap between "XP number exists" and "this feels like a game."
+
+## Changes, by screen
+
+### Dashboard
+- AvatarCard becomes the visual anchor of the page — larger, top-left
+  or top-center, not a small corner element. Logo badge motif (gold
+  gradient, dark outline) should visually echo in the avatar card's
+  border treatment for brand consistency
+- XP bar gets a visible "fill" animation on load (not just on gain) —
+  bar animates from 0 to current value once on page mount, reinforcing
+  progress every time you open the app
+- Streak badge (🔥) gets a subtle pulse/glow when `currentStreak >= 3`
+  — visually distinguishes an active streak from a cold one
+- Leaderboard widget (new, from v2 friends feature) — compact card
+  showing your rank + top 3 friends by XP, links to a full
+  `/leaderboard` page
+
+### Applications / Job Board
+- Reframe as a "quest board" visually: StatusPill per application
+  becomes more game-styled (e.g. Interview = shield icon + color,
+  Offer = trophy icon + gold, Rejected = stays neutral/calm tone, NOT
+  a red "failure" color — matches the "rejection = XP, not loss"
+  principle from business-logic.md)
+- Application cards get slightly more presence — icon per job source
+  (LinkedIn/Wuzzuf icon badge), not just plain text rows
+
+### Quest Board
+- Since quests are now free-text/user-defined (any profession, not
+  just tech), the UI shouldn't visually imply "coding tasks" anymore —
+  use a generic "quest scroll" or "task" icon motif, not code-bracket
+  icons
+- Daily cap (5/day) shown as a small progress indicator ("3/5 quests
+  today") near the "New Quest" button, so the limit is visible before
+  someone hits the 400 error
+
+### Achievements
+- Locked achievements get a more game-appropriate treatment: greyscale
+  + slight blur or "silhouette" fill, not just dimmed opacity — should
+  read as "mystery to unlock," not "disabled button"
+
+### New: Leaderboard page (`/leaderboard`)
+- Ranked list, avatar thumbnail + name + level + XP per row
+- Current user's row visually highlighted (border/background tint)
+- "Invite a friend" CTA at the top (surfaces the invite-link flow from
+  auth-spec.md)
+
+## Global
+- Favicon + browser tab icon: Concept A badge, simplified/flattened
+  for small-size legibility (drop fine details like the star's inner
+  stroke at 16–32px)
+- Extension popup header gets the badge logo too, for brand consistency
+  across all three surfaces (web, extension, and eventually the
+  landing page)

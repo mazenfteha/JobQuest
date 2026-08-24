@@ -7,9 +7,21 @@ export default defineManifest({
   name: 'JobQuest',
   description: 'Save job postings to JobQuest and earn XP.',
   version: '0.1.0',
+  icons: {
+    '16': 'icon-16.png',
+    '32': 'icon-32.png',
+    '48': 'icon-48.png',
+    '128': 'icon-128.png',
+  },
   action: {
     default_popup: 'popup.html',
     default_title: 'Save to JobQuest',
+    default_icon: {
+      '16': 'icon-16.png',
+      '32': 'icon-32.png',
+      '48': 'icon-48.png',
+      '128': 'icon-128.png',
+    },
   },
   // `scripting` is required for chrome.scripting.executeScript (spec omitted
   // it; activeTab alone grants host access but not the API).

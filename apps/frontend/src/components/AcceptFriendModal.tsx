@@ -53,7 +53,7 @@ export default function AcceptFriendModal({ open, code, onClose }: AcceptFriendM
             {status === 'success' ? (
               <>
                 <div className="text-center">
-                  <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-green-50 text-3xl">
+                  <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-success-soft text-3xl">
                     🤝
                   </div>
                   <h2 className="font-display text-lg font-bold text-ink">

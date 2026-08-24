@@ -82,7 +82,7 @@ export default function InviteFriendModal({ open, onClose }: InviteFriendModalPr
             </p>
 
             {error ? (
-              <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
+              <p className="mt-3 rounded-xl bg-streak/10 px-3 py-2 text-sm text-streak">
                 {error}
               </p>
             ) : null}
@@ -94,7 +94,7 @@ export default function InviteFriendModal({ open, onClose }: InviteFriendModalPr
                   type="text"
                   readOnly
                   value={link}
-                  className="w-full rounded-xl border border-black/10 bg-base-sunk px-3 py-2 text-sm text-ink font-mono"
+                  className="w-full rounded-xl border border-black/10 dark:border-white/10 bg-base-sunk px-3 py-2 text-sm text-ink font-mono"
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                 />
                 <button

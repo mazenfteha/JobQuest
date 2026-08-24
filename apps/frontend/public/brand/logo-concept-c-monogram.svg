@@ -1,0 +1,16 @@
+<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="burstGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD873"/>
+      <stop offset="100%" stop-color="#F5A623"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(120,120)">
+    <g fill="url(#burstGrad)">
+      <path d="M0,-110 L14,-40 L84,-56 L34,-8 L96,26 L26,20 L38,90 L0,32 L-38,90 L-26,20 L-96,26 L-34,-8 L-84,-56 L-14,-40 Z"/>
+    </g>
+    <circle r="58" fill="#FFF7E8" stroke="#B9760F" stroke-width="5"/>
+    <text x="0" y="20" font-family="Verdana, Arial, sans-serif" font-weight="700"
+          font-size="56" fill="#2B2118" text-anchor="middle">JQ</text>
+  </g>
+</svg>

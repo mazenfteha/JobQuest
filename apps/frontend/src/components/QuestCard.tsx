@@ -26,10 +26,10 @@ export default function QuestCard({ quest, onComplete, compact }: QuestCardProps
       } ${done ? 'opacity-70' : ''}`}
     >
       <span
-        className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-base-sunk text-lg"
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-50 text-lg"
         aria-hidden
       >
-        🗺️
+        📜
       </span>
 
       <div className="min-w-0 flex-1">

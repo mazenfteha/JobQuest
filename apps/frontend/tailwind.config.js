@@ -1,42 +1,38 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // Warm off-white base + white cards (ui-spec: neutral base, soft cards)
         base: {
-          DEFAULT: '#FBFAF7',
-          card: '#FFFFFF',
-          sunk: '#F4F2EC',
+          DEFAULT: 'var(--color-base)',
+          card: 'var(--color-base-card)',
+          sunk: 'var(--color-base-sunk)',
         },
-        // Slate text
         ink: {
-          DEFAULT: '#0F172A',
-          soft: '#475569',
-          muted: '#94A3B8',
+          DEFAULT: 'var(--color-ink)',
+          soft: 'var(--color-ink-soft)',
+          muted: 'var(--color-ink-muted)',
         },
-        // Primary accent — warm gold/amber (XP, progress, CTAs)
         primary: {
-          50: '#FEF6E7',
-          100: '#FDECC8',
-          200: '#FBD88C',
+          50: 'var(--color-primary-50)',
+          100: 'var(--color-primary-100)',
+          200: 'var(--color-primary-200)',
           300: '#F9C24E',
           400: '#F5A623',
           500: '#E8890C',
           600: '#C26F06',
         },
-        // Secondary accent — streak / fire (orange-red)
         streak: {
-          DEFAULT: '#F9552B',
-          deep: '#E23D14',
-          soft: '#FFE8E0',
+          DEFAULT: '#EF4444',
+          deep: '#DC2626',
+          soft: 'var(--color-streak-soft)',
         },
-        // Success — offers / achievements (green)
         success: {
-          DEFAULT: '#17A34A',
-          soft: '#DCFCE7',
-          deep: '#15803D',
+          DEFAULT: '#22C55E',
+          soft: 'var(--color-success-soft)',
+          deep: '#16A34A',
         },
       },
       fontFamily: {
@@ -54,10 +50,9 @@ export default {
         card: '1.25rem',
       },
       boxShadow: {
-        card: '0 1px 3px rgba(15,23,42,0.04), 0 10px 30px -12px rgba(15,23,42,0.12)',
-        'card-hover':
-          '0 4px 12px rgba(15,23,42,0.06), 0 18px 44px -14px rgba(15,23,42,0.20)',
-        glow: '0 0 0 4px rgba(245,166,35,0.15)',
+        card: 'var(--color-card-shadow)',
+        'card-hover': 'var(--color-card-shadow-hover)',
+        glow: 'var(--color-glow)',
       },
     },
   },

@@ -24,6 +24,12 @@ export default function QuestBoard() {
   const open = useMemo(() => quests.filter((q) => q.status === 'OPEN'), [quests])
   const done = useMemo(() => quests.filter((q) => q.status === 'DONE'), [quests])
 
+  // Daily cap indicator — count completions from today
+  const todayCount = useMemo(() => {
+    const today = new Date().toDateString()
+    return done.filter((q) => q.completedAt && new Date(q.completedAt).toDateString() === today).length
+  }, [done])
+
   async function addQuest(input: { title: string; category: string }) {
     // Throws on failure → NewQuestForm shows the server error inline.
     await api.createQuest(input)
@@ -55,13 +61,24 @@ export default function QuestBoard() {
             Set your own growth quests and earn XP for finishing them.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowForm((s) => !s)}
-          className="rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-primary-600"
-        >
-          {showForm ? 'Cancel' : '+ New Quest'}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Daily cap indicator */}
+          {!loading || data ? (
+            <div className="flex items-center gap-1.5 rounded-full bg-base-sunk px-3 py-1.5 text-xs font-semibold text-ink-soft">
+              <span className="text-primary-400 tabular">{todayCount}</span>
+              <span className="text-ink-muted">/</span>
+              <span className="tabular">5</span>
+              <span className="hidden sm:inline text-ink-muted">today</span>
+            </div>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setShowForm((s) => !s)}
+            className="rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-primary-600"
+          >
+            {showForm ? 'Cancel' : '+ New Quest'}
+          </button>
+        </div>
       </header>
 
       {notice ? (
@@ -90,7 +107,7 @@ export default function QuestBoard() {
         <ErrorState onRetry={reload} />
       ) : open.length === 0 ? (
         <div className="rounded-card bg-base-card p-10 text-center shadow-card">
-          <div className="mb-3 text-4xl">🗺️</div>
+          <div className="mb-3 text-4xl">📜</div>
           <p className="mx-auto max-w-sm text-sm text-ink-soft">
             No open quests — add one to start earning growth XP.
           </p>
@@ -224,17 +241,17 @@ function NewQuestForm({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Solve 2 LeetCode mediums"
+              placeholder="e.g. Read 2 chapters of a career book"
               autoFocus
               aria-invalid={submitted && !!titleError}
               className={`w-full rounded-xl border bg-base px-3 py-2 text-sm text-ink outline-none focus:ring-2 ${
                 submitted && titleError
-                  ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100'
-                  : 'border-black/10 focus:border-primary-400 focus:ring-primary-100'
+                  ? 'border-streak/50 focus:border-streak focus:ring-streak/20'
+                  : 'border-black/10 dark:border-white/10 focus:border-primary-400 focus:ring-primary-100'
               }`}
             />
             {submitted && titleError ? (
-              <p className="mt-1 text-xs font-medium text-rose-600">{titleError}</p>
+              <p className="mt-1 text-xs font-medium text-streak">{titleError}</p>
             ) : null}
           </div>
 
@@ -251,12 +268,12 @@ function NewQuestForm({
               aria-invalid={submitted && !!categoryError}
               className={`w-full rounded-xl border bg-base px-3 py-2 text-sm text-ink outline-none focus:ring-2 ${
                 submitted && categoryError
-                  ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100'
-                  : 'border-black/10 focus:border-primary-400 focus:ring-primary-100'
+                  ? 'border-streak/50 focus:border-streak focus:ring-streak/20'
+                  : 'border-black/10 dark:border-white/10 focus:border-primary-400 focus:ring-primary-100'
               }`}
             />
             {submitted && categoryError ? (
-              <p className="mt-1 text-xs font-medium text-rose-600">
+              <p className="mt-1 text-xs font-medium text-streak">
                 {categoryError}
               </p>
             ) : (
@@ -267,7 +284,7 @@ function NewQuestForm({
           </div>
 
           {serverError ? (
-            <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-medium text-rose-600">
+            <p className="rounded-xl bg-streak/10 px-3 py-2 text-sm font-medium text-streak">
               {serverError}
             </p>
           ) : null}

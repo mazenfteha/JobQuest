@@ -1,0 +1,15 @@
+<svg viewBox="0 0 460 140" xmlns="http://www.w3.org/2000/svg">
+  <text x="10" y="95" font-family="Verdana, Arial, sans-serif" font-weight="700"
+        font-size="76" fill="#2B2118" letter-spacing="-1">Job</text>
+  <text x="150" y="95" font-family="Verdana, Arial, sans-serif" font-weight="700"
+        font-size="76" fill="#F5A623" letter-spacing="-1">uest</text>
+  <!-- stylized Q formed by the sword -->
+  <circle cx="150" cy="60" r="0" fill="none"/>
+  <g transform="translate(150,20)">
+    <ellipse cx="10" cy="55" rx="34" ry="34" fill="none" stroke="#F5A623" stroke-width="14"/>
+    <line x1="-18" y1="93" x2="52" y2="18" stroke="#D2451C" stroke-width="10" stroke-linecap="round"/>
+    <line x1="34" y1="4" x2="52" y2="18" stroke="#7A2A0F" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="-18" cy="93" r="7" fill="#7A2A0F"/>
+  </g>
+  <rect x="14" y="112" width="330" height="6" rx="3" fill="#F5A623"/>
+</svg>

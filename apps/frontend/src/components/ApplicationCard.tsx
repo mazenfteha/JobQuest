@@ -6,11 +6,11 @@ import StatusPill from './StatusPill'
 // ui-spec animation guidance. Clickable when onClick is provided.
 
 const MONOGRAM_COLORS = [
-  'bg-primary-100 text-primary-600',
-  'bg-blue-100 text-blue-700',
-  'bg-success-soft text-success-deep',
-  'bg-streak-soft text-streak-deep',
-  'bg-indigo-100 text-indigo-700',
+  'bg-primary-50 text-primary-400',
+  'bg-blue-500/15 text-blue-400',
+  'bg-success-soft text-success',
+  'bg-streak-soft text-streak',
+  'bg-indigo-500/15 text-indigo-400',
 ]
 
 function monogram(company: string): { initials: string; color: string } {
@@ -25,6 +25,15 @@ function monogram(company: string): { initials: string; color: string } {
   return { initials, color: MONOGRAM_COLORS[hash] }
 }
 
+function sourceBadge(url: string): { icon: string; label: string } | null {
+  try {
+    const host = new URL(url).hostname
+    if (host.includes('linkedin')) return { icon: '💼', label: 'LinkedIn' }
+    if (host.includes('wuzzuf')) return { icon: '🌐', label: 'Wuzzuf' }
+  } catch {}
+  return null
+}
+
 interface ApplicationCardProps {
   application: ApplicationListItem
   onClick?: (application: ApplicationListItem) => void
@@ -33,6 +42,7 @@ interface ApplicationCardProps {
 export default function ApplicationCard({ application, onClick }: ApplicationCardProps) {
   const { job, status, appliedAt } = application
   const { initials, color } = monogram(job.company)
+  const source = sourceBadge(job.url)
 
   return (
     <button
@@ -48,7 +58,18 @@ export default function ApplicationCard({ application, onClick }: ApplicationCar
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate font-semibold text-ink">{job.title}</p>
+        <div className="flex items-center gap-2">
+          <p className="truncate font-semibold text-ink">{job.title}</p>
+          {source ? (
+            <span
+              className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-base-sunk px-1.5 py-0.5 text-[10px] font-medium text-ink-muted"
+              title={source.label}
+            >
+              <span aria-hidden>{source.icon}</span>
+              <span className="hidden sm:inline">{source.label}</span>
+            </span>
+          ) : null}
+        </div>
         <p className="truncate text-xs text-ink-muted">
           {job.company}
           {job.location ? ` · ${job.location}` : ''}

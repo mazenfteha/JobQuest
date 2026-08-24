@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import type { Achievement } from '../lib/api'
 import { api } from '../lib/api'
 import { useApi } from '../lib/useApi'
@@ -24,6 +25,8 @@ export default function Achievements() {
     return { ordered, unlockedCount, total, pct }
   }, [achievements])
 
+  const reduce = useReducedMotion()
+
   return (
     <div>
       <header className="mb-6">
@@ -35,9 +38,15 @@ export default function Achievements() {
         </p>
         {!loading || data ? (
           <div className="mt-3 h-2.5 max-w-xs overflow-hidden rounded-full bg-base-sunk">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-primary-300 to-primary-600"
-              style={{ width: `${pct}%` }}
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-primary-300 via-primary-400 to-primary-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${pct}%` }}
+              transition={
+                reduce
+                  ? { duration: 0 }
+                  : { type: 'spring', stiffness: 60, damping: 14 }
+              }
             />
           </div>
         ) : null}

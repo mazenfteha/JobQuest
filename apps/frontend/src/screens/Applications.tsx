@@ -155,7 +155,7 @@ function FilterPill({
       {label}
       <span
         className={`rounded-full px-1.5 text-xs tabular ${
-          active ? 'bg-white/20' : 'bg-base-sunk text-ink-muted'
+          active ? 'bg-black/20' : 'bg-base-sunk text-ink-muted'
         }`}
       >
         {count}
@@ -266,8 +266,8 @@ function AddJobModal({
   const inputClass = (invalid: boolean) =>
     `w-full rounded-xl border bg-base px-3 py-2 text-sm text-ink outline-none focus:ring-2 ${
       invalid
-        ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-100'
-        : 'border-black/10 focus:border-primary-400 focus:ring-primary-100'
+        ? 'border-streak/50 focus:border-streak focus:ring-streak/20'
+        : 'border-black/10 dark:border-white/10 focus:border-primary-400 focus:ring-primary-100'
     }`
 
   return (
@@ -321,7 +321,7 @@ function AddJobModal({
               className={inputClass(submitted && !!titleError)}
             />
             {submitted && titleError ? (
-              <p className="mt-1 text-xs font-medium text-rose-600">{titleError}</p>
+              <p className="mt-1 text-xs font-medium text-streak">{titleError}</p>
             ) : null}
           </div>
 
@@ -338,7 +338,7 @@ function AddJobModal({
                 className={inputClass(submitted && !!companyError)}
               />
               {submitted && companyError ? (
-                <p className="mt-1 text-xs font-medium text-rose-600">
+                <p className="mt-1 text-xs font-medium text-streak">
                   {companyError}
                 </p>
               ) : null}
@@ -370,13 +370,13 @@ function AddJobModal({
               className={inputClass(submitted && !!urlError)}
             />
             {submitted && urlError ? (
-              <p className="mt-1 text-xs font-medium text-rose-600">{urlError}</p>
+              <p className="mt-1 text-xs font-medium text-streak">{urlError}</p>
             ) : null}
           </div>
         </div>
 
         {formError ? (
-          <p className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-medium text-rose-600">
+          <p className="mt-4 rounded-xl bg-streak/10 px-3 py-2 text-sm font-medium text-streak">
             {formError}
           </p>
         ) : null}
@@ -419,6 +419,7 @@ function DetailModal({
   const [status, setStatus] = useState<ApplicationStatus>(application.status)
   const [submitting, setSubmitting] = useState<ApplicationStatus | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [descExpanded, setDescExpanded] = useState(false)
   const { celebrate } = useRewards()
 
   // Detail fetch for description + timestamps (GET /applications/:id).
@@ -508,12 +509,29 @@ function DetailModal({
           </a>
         </div>
 
-        {/* Description (from detail fetch) */}
+        {/* Description (from detail fetch) — truncated with "show more" */}
         <div className="mt-4">
           {detail.loading ? (
             <div className="skeleton h-4 w-2/3 rounded" />
           ) : description ? (
-            <p className="text-sm text-ink-soft">{description}</p>
+            <div>
+              <p
+                className={`text-sm text-ink-soft ${
+                  !descExpanded ? 'line-clamp-3' : ''
+                }`}
+              >
+                {description}
+              </p>
+              {description.length > 200 ? (
+                <button
+                  type="button"
+                  onClick={() => setDescExpanded((e) => !e)}
+                  className="mt-1 text-xs font-semibold text-primary-400 hover:text-primary-300"
+                >
+                  {descExpanded ? 'Show less' : 'Show more'}
+                </button>
+              ) : null}
+            </div>
           ) : (
             <p className="text-sm text-ink-muted">No description saved.</p>
           )}
@@ -525,7 +543,7 @@ function DetailModal({
             Progress
           </p>
           {status === 'REJECTED' ? (
-            <div className="rounded-xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">
+            <div className="rounded-xl bg-streak/10 px-4 py-3 text-sm font-medium text-streak">
               Marked as rejected — every attempt still counts. Onwards.
             </div>
           ) : (
@@ -580,7 +598,7 @@ function DetailModal({
                   onClick={() => transition(s)}
                   className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-60 ${
                     s === 'REJECTED'
-                      ? 'bg-rose-500 hover:bg-rose-600'
+                      ? 'bg-streak hover:bg-streak-deep'
                       : 'bg-primary-500 hover:bg-primary-600'
                   }`}
                 >
@@ -590,7 +608,7 @@ function DetailModal({
             </div>
           )}
           {actionError ? (
-            <p className="mt-2 text-sm font-medium text-rose-600">
+            <p className="mt-2 text-sm font-medium text-streak">
               {actionError}
             </p>
           ) : null}

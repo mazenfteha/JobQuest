@@ -38,20 +38,48 @@ export default function XPBar({
       ) : null}
 
       <div
-        className="h-3 w-full overflow-hidden rounded-full bg-base-sunk"
+        className="relative h-3.5 w-full overflow-hidden rounded-full bg-base-sunk"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={pct}
       >
+        {/* Glow under the fill */}
         <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-primary-300 to-primary-600"
+          className="absolute inset-0 rounded-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: pct > 0 ? 1 : 0 }}
+          transition={{ delay: 0.4, duration: 0.3 }}
+          style={{
+            background: `linear-gradient(90deg, transparent ${Math.max(pct - 8, 0)}%, rgba(245,166,35,0.25) ${pct}%, transparent ${Math.min(pct + 4, 100)}%)`,
+          }}
+        />
+
+        {/* Main fill bar */}
+        <motion.div
+          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary-300 via-primary-400 to-primary-500"
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
           transition={
-            reduce ? { duration: 0 } : { type: 'spring', stiffness: 90, damping: 18 }
+            reduce
+              ? { duration: 0 }
+              : { type: 'spring', stiffness: 60, damping: 14, mass: 1 }
           }
         />
+
+        {/* Shimmer sweep — runs once after fill completes */}
+        {!reduce && pct > 0 ? (
+          <motion.div
+            className="absolute inset-y-0 w-1/3 rounded-full"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+            }}
+            initial={{ left: '-33%' }}
+            animate={{ left: '130%' }}
+            transition={{ delay: 0.8, duration: 0.7, ease: 'easeInOut' }}
+          />
+        ) : null}
       </div>
     </div>
   )
