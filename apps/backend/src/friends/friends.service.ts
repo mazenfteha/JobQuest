@@ -3,11 +3,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class FriendsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {}
 
   async getInviteLink(userId: string) {
     const user = await this.prisma.user.findUniqueOrThrow({
@@ -15,7 +19,7 @@ export class FriendsService {
       select: { inviteCode: true },
     });
 
-    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5200';
+    const frontendUrl = this.config.get<string>('FRONTEND_URL');
     return { inviteLink: `${frontendUrl}/join?code=${user.inviteCode}` };
   }
 

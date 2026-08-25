@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import type { User } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { Public } from './public.decorator';
 import { CurrentUser } from './current-user.decorator';
@@ -11,7 +12,10 @@ const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly config: ConfigService,
+  ) {}
 
   @Public()
   @Get('google')
@@ -38,10 +42,10 @@ export class AuthController {
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true,
       sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      secure: this.config.get<string>('NODE_ENV') === 'production',
       maxAge: THIRTY_DAYS_MS,
     });
-    res.redirect(process.env.FRONTEND_URL ?? 'http://localhost:5200');
+    res.redirect(this.config.get<string>('FRONTEND_URL')!);
   }
 
   @Get('me')
