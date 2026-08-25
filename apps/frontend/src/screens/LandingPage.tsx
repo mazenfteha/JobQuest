@@ -1,6 +1,45 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { AUTH_LOGIN_URL } from '../lib/api'
 
+const HOW_IT_WORKS = [
+  {
+    step: 1,
+    icon: '🧩',
+    title: 'Install the extension',
+    desc: 'Add the JobQuest Chrome extension — one click, no config.',
+  },
+  {
+    step: 2,
+    icon: '💼',
+    title: 'Browse jobs normally',
+    desc: 'Open LinkedIn or Wuzzuf. When you find a posting you like, click the JobQuest icon.',
+  },
+  {
+    step: 3,
+    icon: '🔖',
+    title: 'Capture with one click',
+    desc: 'The extension grabs the title, company, and URL. Hit Save — you just earned +10 XP.',
+  },
+  {
+    step: 4,
+    icon: '📤',
+    title: 'Apply & track progress',
+    desc: 'Mark it as Applied, then Interview, then Offer. Every status change earns more XP.',
+  },
+  {
+    step: 5,
+    icon: '⚡',
+    title: 'Watch your XP bar fill',
+    desc: 'XP from every action fills your bar. Hit the threshold and you level up — your avatar evolves.',
+  },
+  {
+    step: 6,
+    icon: '🔥',
+    title: 'Build a streak',
+    desc: 'Log activity 3+ days in a row and your streak ignites. Miss a day and it resets — stay consistent.',
+  },
+]
+
 const FEATURES = [
   {
     icon: '⚡',
@@ -119,6 +158,73 @@ export default function LandingPage() {
             }
           />
         </motion.div>
+      </section>
+
+      {/* ── How It Works ──────────────────────────────────────── */}
+      <section className="mx-auto max-w-3xl px-4 py-16">
+        <motion.h2
+          className="mb-4 text-center font-display text-xl font-bold text-ink sm:text-2xl"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={reduce ? { duration: 0 } : { duration: 0.5 }}
+        >
+          How it works
+        </motion.h2>
+        <motion.p
+          className="mx-auto mb-10 max-w-md text-center text-sm text-ink-soft"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+        >
+          From your first job posting to a full-blown streak — here's the journey.
+        </motion.p>
+
+        <div className="relative space-y-6">
+          {/* Connector line */}
+          <div className="absolute left-[19px] top-6 bottom-6 w-px bg-ink/10 dark:bg-ink/5 sm:left-1/2 sm:bottom-auto sm:top-6 sm:h-[calc(100%-3rem)] sm:w-px" />
+
+          {HOW_IT_WORKS.map((item, i) => {
+            const isRight = i % 2 === 1
+            return (
+              <motion.div
+                key={item.step}
+                className={`relative flex items-start gap-4 sm:items-center ${
+                  isRight ? 'sm:flex-row-reverse' : ''
+                }`}
+                initial={{ opacity: 0, x: isRight ? 24 : -24 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={
+                  reduce
+                    ? { duration: 0 }
+                    : { type: 'spring', stiffness: 100, damping: 20, delay: i * 0.07 }
+                }
+              >
+                {/* Icon circle (on the line) */}
+                <div className="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-500 text-lg text-white shadow-glow">
+                  {item.icon}
+                </div>
+
+                {/* Text card */}
+                <div
+                  className={`flex-1 rounded-card bg-base-card p-5 shadow-card sm:max-w-[44%] ${
+                    isRight ? 'sm:text-right' : ''
+                  }`}
+                >
+                  <h3 className="font-display text-sm font-bold text-ink">
+                    <span className="text-primary-500">Step {item.step}:</span>{' '}
+                    {item.title}
+                  </h3>
+                  <p className="mt-1.5 text-xs leading-relaxed text-ink-soft">
+                    {item.desc}
+                  </p>
+                </div>
+              </motion.div>
+            )
+          })}
+        </div>
       </section>
 
       {/* ── Core Loop ─────────────────────────────────────────── */}
