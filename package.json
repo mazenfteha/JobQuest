@@ -1,5 +1,5 @@
 {
-  "name": "jobquest",
+  "name": "@jobquest/shared",
   "version": "1.0.0",
   "private": true,
   "workspaces": [
