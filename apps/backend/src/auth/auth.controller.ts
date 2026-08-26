@@ -65,7 +65,12 @@ export class AuthController {
 
   @Post('logout')
   logout(@Res() res: Response): void {
-    res.clearCookie(COOKIE_NAME);
+    res.clearCookie(COOKIE_NAME, {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: this.config.get<string>('NODE_ENV') === 'production',
+    });
+
     res.json({ ok: true });
   }
 
