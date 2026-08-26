@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
+import { Routes, Route, useSearchParams } from 'react-router-dom'
 import AppLayout from './layout/AppLayout'
 import Dashboard from './screens/Dashboard'
 import Applications from './screens/Applications'
