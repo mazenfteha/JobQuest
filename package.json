@@ -8,7 +8,9 @@
   ],
   "scripts": {
     "dev:backend": "npm run start:dev -w apps/backend",
-    "dev:frontend": "npm run dev -w apps/frontend"
+    "dev:frontend": "npm run dev -w apps/frontend",
+    "prod:backend": "npm run start:prod -w apps/backend",
+    "prod:frontend": "npm run build -w apps/frontend"
   },
   "keywords": [],
   "author": "",
