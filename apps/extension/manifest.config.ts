@@ -29,8 +29,8 @@ export default defineManifest({
   host_permissions: [
     'https://www.linkedin.com/*',
     'https://wuzzuf.net/*',
-    // Dev backend origin — lets the popup fetch bypass CORS. Swap for the
-    // deployed origin in Phase 6.
+    // Dev + prod backend origins — lets the popup fetch bypass CORS.
     'http://localhost:3000/*',
+    'https://jobquest-production-e0a1.up.railway.app/*',
   ],
 })
