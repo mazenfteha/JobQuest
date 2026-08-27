@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 
-const DOWNLOAD_URL = 'https://github.com/mazenfteha/JobQuest/releases/download/jobquest-v2/jobquest-extension.zip'
+const DOWNLOAD_URL = 'https://github.com/mazenfteha/JobQuest/releases/download/MVP/jobquest-extension.zip'
 
 const STEPS = [
   {

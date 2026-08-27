@@ -6,7 +6,7 @@ Chrome MV3 browser extension that extracts job posting details from LinkedIn and
 
 ### Install from a release (recommended)
 
-1. Download the latest `jobquest-extension.zip` from [GitHub Releases](https://github.com/mazenfteha/JobQuest/releases/download/jobquest-v2/jobquest-extension.zip)
+1. Download the latest `jobquest-extension.zip` from [GitHub Releases](https://github.com/mazenfteha/JobQuest/releases/download/MVP/jobquest-extension.zip)
 2. Unzip the file to a permanent location (e.g. `~/JobQuestExtension`)
 3. Open Chrome and go to `chrome://extensions`
 4. Enable **Developer mode** (toggle in the top-right)
