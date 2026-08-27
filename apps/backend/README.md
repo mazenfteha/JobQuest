@@ -1,98 +1,109 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# JobQuest Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS API server with Prisma ORM, PostgreSQL (Neon), Google OAuth, and JWT authentication.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Scripts
 
-## Description
+Run from the repo root (npm workspace) or from this directory:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+| Command | What it does |
+|---|---|
+| `npm run dev:backend` | Start in watch mode (root) |
+| `npm run start:dev` | Start in watch mode (this directory) |
+| `npm run start:prod` | Start compiled production build |
+| `npm run build` | `prisma generate` + `nest build` |
+| `npm run prisma:migrate` | Run Prisma migrations against dev database |
+| `npm run prisma:seed` | Seed achievements table |
+| `npm run prisma:studio` | Open Prisma Studio (visual DB browser) |
+| `npm run lint` | ESLint + Prettier |
+| `npm run test` | Unit tests (Jest) |
+| `npm run test:e2e` | End-to-end tests |
 
-## Project setup
+## Environment variables
 
-```bash
-$ npm install
+All required — backend refuses to start if any are missing. See `.env.example` for the full template.
+
+| Variable | Description |
+|---|---|
+| `NODE_ENV` | `development` or `production` |
+| `DATABASE_URL` | Neon pooled connection string (runtime queries) |
+| `DIRECT_DATABASE_URL` | Neon direct connection string (Prisma Migrate only) |
+| `JWT_SECRET` | Random hex for signing JWTs (`openssl rand -hex 32`) |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `GOOGLE_CALLBACK_URL` | OAuth callback URL (dev: `http://localhost:3000/auth/google/callback`) |
+| `FRONTEND_URL` | Frontend origin for CORS (dev: `http://localhost:5200`) |
+| `PORT` | Server port (default: `3000`) |
+
+## Specs that govern this app
+
+| Spec | What it defines |
+|---|---|
+| [specs/data-model.md](../../specs/data-model.md) | Prisma schema, enums, relations |
+| [specs/business-logic.md](../../specs/business-logic.md) | XP awards, leveling formula, streak logic, achievement triggers |
+| [specs/api.md](../../specs/api.md) | All endpoint contracts, request/response shapes |
+
+## Source structure
+
+```
+src/
+├── auth/           Google OAuth + JWT guards, strategy, controller
+├── jobs/           POST /jobs — save job + create application
+├── applications/   GET/PATCH applications, status transitions
+├── activities/     Manual activity logging
+├── quests/         CRUD + completion for self-created quests
+├── achievements/   Achievement checks and listing
+├── dashboard/      GET /dashboard — aggregated view
+├── friends/        Invite/accept friend links
+├── leaderboard/    Ranked friend list by XP
+├── xp/             awardXP pipeline — single funnel for all XP
+├── prisma/         PrismaService (global module)
+├── config/         Env validation (class-validator)
+└── common/         getSingleUser() helper, shared utilities
 ```
 
-## Compile and run the project
+## Deployment (Railway)
+
+1. Create a new Railway project
+2. Add a **PostgreSQL** plugin (or connect your Neon database)
+3. Set all environment variables in Railway's dashboard
+4. Set the **root directory** to `apps/backend`
+5. Railway auto-detects NestJS and runs `npm run build && npm run start:prod`
+
+**Prisma migrations in production:**
+
+Add a build step or post-deploy hook:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npx prisma migrate deploy
+npx prisma db seed
 ```
 
-## Run tests
+Or run `prisma migrate deploy` as a one-off Railway job.
 
-```bash
-# unit tests
-$ npm run test
+**CORS:** Set `FRONTEND_URL` to your Vercel domain (e.g. `https://your-app.vercel.app`).
 
-# e2e tests
-$ npm run test:e2e
+## API overview
 
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/auth/google` | Redirect to Google OAuth |
+| `GET` | `/auth/google/callback` | OAuth callback, sets JWT cookie |
+| `GET` | `/auth/me` | Current user profile |
+| `POST` | `/auth/logout` | Clear session |
+| `GET` | `/auth/extension-token` | JWT for browser extension |
+| `POST` | `/jobs` | Save a job + create application |
+| `GET` | `/applications` | List applications (optional `?status=` filter) |
+| `GET` | `/applications/:id` | Single application detail |
+| `PATCH` | `/applications/:id/status` | Transition application status |
+| `POST` | `/activities/manual-log` | Log networking, CV, cover letter |
+| `GET` | `/activities` | Recent activity feed |
+| `POST` | `/quests` | Create a quest |
+| `GET` | `/quests` | List quests (optional `?status=` filter) |
+| `PATCH` | `/quests/:id/complete` | Complete a quest |
+| `DELETE` | `/quests/:id` | Delete an open quest |
+| `GET` | `/achievements` | All achievements with unlock status |
+| `GET` | `/dashboard` | Aggregated dashboard data |
+| `POST` | `/friends/invite` | Generate invite link |
+| `POST` | `/friends/accept/:code` | Accept friend invite |
+| `GET` | `/leaderboard` | Friends ranked by XP |

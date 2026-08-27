@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import { AUTH_LOGIN_URL } from '../lib/api'
 
 const HOW_IT_WORKS = [
@@ -140,6 +141,22 @@ export default function LandingPage() {
           Sign in with Google
         </motion.a>
 
+        {/* Install extension link */}
+        <motion.div
+          className="mt-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.45, duration: 0.4 }}
+        >
+          <Link
+            to="/extension-setup"
+            className="inline-flex items-center gap-2 rounded-xl border border-ink/10 bg-base-card px-5 py-2.5 text-sm font-medium text-ink shadow-card transition-colors hover:border-primary-400 hover:text-primary-500 dark:border-ink/5"
+          >
+            <span aria-hidden>🧩</span>
+            Install the extension
+          </Link>
+        </motion.div>
+
         {/* Subtle decorative XP bar */}
         <motion.div
           className="mt-10 h-2 w-64 max-w-full overflow-hidden rounded-full bg-base-sunk sm:w-80"
@@ -215,7 +232,13 @@ export default function LandingPage() {
                 >
                   <h3 className="font-display text-sm font-bold text-ink">
                     <span className="text-primary-500">Step {item.step}:</span>{' '}
-                    {item.title}
+                    {item.step === 1 ? (
+                      <Link to="/extension-setup" className="hover:text-primary-500 transition-colors">
+                        {item.title}
+                      </Link>
+                    ) : (
+                      item.title
+                    )}
                   </h3>
                   <p className="mt-1.5 text-xs leading-relaxed text-ink-soft">
                     {item.desc}

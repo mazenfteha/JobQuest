@@ -6,6 +6,7 @@ import QuestBoard from './screens/QuestBoard'
 import Achievements from './screens/Achievements'
 import Leaderboard from './screens/Leaderboard'
 import Join from './screens/Join'
+import ExtensionSetup from './screens/ExtensionSetup'
 import LandingPage from './screens/LandingPage'
 import { RewardsProvider } from './rewards/RewardsProvider'
 import { AuthProvider, useAuth } from './lib/auth'
@@ -79,6 +80,7 @@ function Gate() {
     <RewardsProvider>
       <Routes>
         <Route path="/join" element={<Join />} />
+        <Route path="/extension-setup" element={<ExtensionSetup />} />
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/applications" element={<Applications />} />
